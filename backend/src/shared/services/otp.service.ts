@@ -1,0 +1,27 @@
+import { redisClient } from "../../config/redis.ts";
+import cryto from "crypto";
+
+class OtpService {
+  private readonly OTP_PREFIX = "otp:";
+  private readonly OTP_EXPIRY_SECONDS = 600; // 10 Minutes
+
+  generateOtp(): string {
+    return cryto.randomInt(100000, 999999).toString();
+  }
+  async storeOtp(email: string, otp: string): Promise<void> {
+    await redisClient.set(
+      `${this.OTP_PREFIX}${email}`,
+      otp,
+      "EX", // expiry -> EX (TTL)
+      this.OTP_EXPIRY_SECONDS,
+    );
+  }
+  async getOtp(email: string): Promise<string | null> {
+    return await redisClient.get(`${this.OTP_PREFIX}${email}`);
+  }
+  async deleteOtp(email: string): Promise<void> {
+    await redisClient.del(`${this.OTP_PREFIX}${email}`);
+  }
+}
+
+export const otpService = new OtpService();
