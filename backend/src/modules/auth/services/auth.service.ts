@@ -38,6 +38,10 @@ export class AuthService implements IAuthService {
       throw new UnauthorizedError("Invalid Google token");
     }
 
+    if (!googleUser) {
+      throw new UnauthorizedError("Invalid Google token payload");
+    }
+
     const email = googleUser.email;
     const googleId = googleUser.sub; // claim - unique
     const username = googleUser.name || email.split("@")[0];

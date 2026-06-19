@@ -1,39 +1,36 @@
-# Stage 1: Build stage
-FROM node:20-alpine AS builder
+FROM node:20-alpine AS build
 
-# Install build tools for native modules (e.g. bcrypt)
+# Install build tools for native packages (like bcrypt)
 RUN apk add --no-cache python3 make g++
 
-WORKDIR /usr/src/app
-
-COPY package*.json tsconfig.json ./
-
-# Install dependencies (including devDependencies for building)
-RUN npm ci
-
-# Copy source code
-COPY src ./src
-
-# Compile TypeScript
-RUN npm run build
-
-# Stage 2: Production runtime stage
-FROM node:20-alpine
-
-# Install build tools for native modules in runtime production dependencies
-RUN apk add --no-cache python3 make g++
-
-WORKDIR /usr/src/app
+WORKDIR /app
 
 COPY package*.json ./
+RUN npm install
 
-# Install only production dependencies
-RUN npm ci --only=production
+COPY . .
+RUN npm run build
 
-# Copy compiled code from builder stage
-COPY --from=builder /usr/src/app/dist ./dist
+# Remove devDependencies from node_modules (keeps native binaries intact)
+RUN npm prune --omit=dev
 
-# Expose backend port (from .env/env.ts)
+# ---------- Runtime stage ----------
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files (for metadata only, not for installing)
+COPY package*.json ./
+
+# Copy pruned node_modules from build stage (native modules already compiled)
+COPY --from=build /app/node_modules ./node_modules
+
+# Copy compiled output
+COPY --from=build /app/dist ./dist
+
+RUN mkdir -p uploads logs
+
 EXPOSE 8080
 
-CMD ["npm", "start"]
+# Use node directly instead of npm start (saves a process, cleaner signals)
+CMD ["node", "dist/server.js"]

@@ -69,7 +69,7 @@ export const errorMiddleware = (
     logger.warn(`${statusCode} - ${message} - ${req.originalUrl} - ${req.ip}`);
   } else {
     logger.error(
-      `500 - ${message} - ${req.originalUrl} - ${req.method} - ${error.stack}`,
+      `500 - ${message} - ${req.originalUrl} - ${req.method} - ${err.stack}`,
     );
   }
 
