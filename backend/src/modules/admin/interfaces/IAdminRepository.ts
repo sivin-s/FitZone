@@ -13,6 +13,6 @@ export interface IAdminRepository {
   unblockUser(userId: string): Promise<IUser | null>;
   updateUser(
     userId: string,
-    data: Partial<Pick<IUser, "username" | "role" | "isBlocked">>,
+    data: Partial<Pick<IUser, "username" | "email" | "role" | "isBlocked" | "gender" | "phone" | "city" | "pincode" | "profilePicture">>,
   ): Promise<IUser | null>;
 }

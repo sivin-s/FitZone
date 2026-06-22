@@ -240,8 +240,7 @@ function PersonalDetailsForm({
                 <option value="" className='text-black'>Select Gender</option>
                 <option value="Male" className='text-black'>Male</option>
                 <option value="Female" className='text-black'>Female</option>
-                <option value="Non-binary" className='text-black'>Non-binary</option>
-                <option value="Prefer not to say" className='text-black'>Prefer not to say</option>
+                <option value="Non-binary" className='text-black'>Other</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center text-black px-3 pointer-events-none text-gray-500">
                 <ChevronDownIcon />

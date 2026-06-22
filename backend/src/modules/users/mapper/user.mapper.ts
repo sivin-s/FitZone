@@ -4,7 +4,7 @@ import type { UserDto } from "../DTO/user.dto";
 export class UserMapper {
   static toDto(user: IUser): UserDto {
     return {
-      id: user._id.toString(),
+      _id: user._id.toString(),
       username: user.username,
       email: user.email,
       role: user.role,

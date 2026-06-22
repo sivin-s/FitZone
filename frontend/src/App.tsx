@@ -23,6 +23,7 @@ import ProtectedLayout from './layouts/ProtectedLayout';
 import AdminRoute from './components/AdminRoute';
 import AdminLayout from './layouts/AdminLayout';
 import NotFoundPage from './pages/NotFoundPage';
+import OtpVerification from './pages/OtpVerificationPage';
 
 
 const queryClient = new QueryClient({
@@ -40,6 +41,7 @@ const router = createBrowserRouter([
   { path: '/register', element: <SignUpPage /> },
   {path: '/admin/login', element: <AdminLogin/>},
   {path: '/forgot-password', element: <ResetOTPPasswordPage/>},
+  {path: '/verify-otp', element: <OtpVerification/>},
 
   {
     element: <ProtectedRoute />,

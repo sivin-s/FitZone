@@ -9,9 +9,10 @@ import { NotFoundError } from "../../../shared/errors/NotFoundError.ts";
 import type { IAdminController } from "../interfaces/IAdminController.ts";
 import type { IAdminService } from "../interfaces/IAdminService.ts";
 import { UserMapper } from "../../users/mapper/user.mapper.ts";
+import { storageProvider } from "../../../shared/services/s3Storage.provider.ts";
 
 export class AdminController implements IAdminController {
-  constructor(private adminService: IAdminService) {}
+  constructor(private adminService: IAdminService) { }
 
   getUsers = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
@@ -21,9 +22,20 @@ export class AdminController implements IAdminController {
         Number(page),
         Number(limit),
       );
+
+      const usersList = UserMapper.toDtoList(result.users);
+      const usersWithUrls = await Promise.all(
+        usersList.map(async (u) => {
+          if (u.profilePicture) {
+            u.profilePicture = await storageProvider.getPresignedUrl(u.profilePicture);
+          }
+          return u;
+        })
+      );
+
       res.status(200).json(
         new ApiResponse(200, "Users retrieved successfully", {
-          users: UserMapper.toDtoList(result.users),
+          users: usersWithUrls,
           total: result.total,
         }),
       );
@@ -71,19 +83,42 @@ export class AdminController implements IAdminController {
       // admin
       const adminId = req.user?.userId;
       const { userId } = req.params;
-      const { username, role, isBlocked } = req.body;
+      const { username, email, role, isBlocked, gender, phone, city, pincode } = req.body;
+
+      const parsedIsBlocked = isBlocked === "true" ? true : isBlocked === "false" ? false : undefined;
+
+      let profilePictureUrl = undefined;
+      if (req.file) {
+        profilePictureUrl = await storageProvider.uploadFile(req.file, "avatars");
+      }
 
       const updateUser = await this.adminService.updateUser(
         userId as string,
         adminId as string,
-        { username, role, isBlocked },
+        {
+          username,
+          email,
+          role,
+          isBlocked: parsedIsBlocked,
+          gender,
+          phone,
+          city,
+          pincode,
+          ...(profilePictureUrl && { profilePicture: profilePictureUrl }),
+        },
       );
       if (!updateUser) {
         throw new NotFoundError("User not found");
       }
+      const userDto = UserMapper.toDto(updateUser);
+      if (userDto.profilePicture) {
+        userDto.profilePicture = await storageProvider.getPresignedUrl(
+          userDto.profilePicture,
+        );
+      }
       res
         .status(200)
-        .json(new ApiResponse(200, "User updated successfully", updateUser));
+        .json(new ApiResponse(200, "User updated successfully", userDto));
     },
   );
 }

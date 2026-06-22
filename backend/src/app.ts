@@ -30,7 +30,7 @@ app.use(cookiesParser());
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15m
-  limit: 50,
+  limit: 100,
   standardHeaders: "draft-7",
   legacyHeaders: false,
   message: {

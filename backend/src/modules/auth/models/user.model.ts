@@ -10,25 +10,13 @@ export interface IUser extends Document {
   isVerified: boolean;
   profilePicture?: string;
   googleId?: string;
-  gender?: string;
+  gender?: "Male" | "Female" | "Other";
   phone?: string;
-  city?: {
-    type: string;
-    default: undefined;
-    trim: true;
-  };
-  pincode?: {
-    type: string;
-    default: undefined;
-    trim: true;
-    maxLength: [6, "Pincode cannot exceed 6 digits"];
-  };
+  city?: string;
+  pincode?: string;
   otp?: string;
   otpExpiry?: Date;
-  isPremium: {
-    type: boolean;
-    default: false;
-  };
+  isPremium: boolean;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -82,7 +70,7 @@ const userSchema = new Schema<IUser>(
     },
     gender: {
       type: String,
-      enum: ["Male", "Female", "Non-binary", "Prefer not to say"],
+      enum: ["Male", "Female", "Other"],
       default: undefined,
     },
     city: {

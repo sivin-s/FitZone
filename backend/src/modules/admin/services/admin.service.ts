@@ -25,7 +25,7 @@ export class AdminService implements IAdminService {
   async updateUser(
     userId: string,
     adminId: string,
-    data: Partial<Pick<IUser, "username" | "role" | "isBlocked">>,
+    data: Partial<Pick<IUser, "username" | "email" | "role" | "isBlocked" | "gender" | "phone" | "city" | "pincode" | "profilePicture">>,
   ) {
     if (userId === adminId && data.role && data.role !== "admin") {
       throw new BadRequestError("Admins cannot change their own role.");
