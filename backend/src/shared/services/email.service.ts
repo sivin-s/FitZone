@@ -1,8 +1,9 @@
 import { logger } from "../../config/logger.ts";
 import nodemailer from "nodemailer";
 import { env } from "../../config/env.ts";
+import type{ IEmailService } from "../interfaces/IEmailService.ts";
 
-class EmailService {
+class EmailService implements IEmailService {
   private _transporter: nodemailer.Transporter;
   constructor() {
     this._transporter = nodemailer.createTransport({

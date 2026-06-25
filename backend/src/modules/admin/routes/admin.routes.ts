@@ -1,8 +1,14 @@
 import { Router } from "express";
 import { authenticate } from "../../../middleware/auth.middleware.ts";
 import { authorizeRoles } from "../../../middleware/role.middleware.ts";
-import { adminController } from "../controllers/admin.controller.ts";
 import multer from "multer";
+
+// injection
+import {adminContainer} from "../DI/container.ts"
+import {TYPES} from "../types/types.ts"
+import type { IAdminController } from "../interfaces/IAdminController.ts";
+
+const adminController = adminContainer.get<IAdminController>(TYPES.IAdminController)
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });

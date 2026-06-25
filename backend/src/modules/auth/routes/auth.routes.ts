@@ -10,7 +10,12 @@ import { resendOtpSchema } from "../schemas/resendOtp.schema.ts";
 import { forgotPasswordSchema } from "../schemas/forgotPassword.schema.ts";
 import { resetPasswordSchema } from "../schemas/resetPassword.schema.ts";
 
-import { authController } from "../controllers/auth.controller.ts";
+// injection
+import {authContainer} from "../DI/container.ts";
+import {TYPES} from "../types/types.ts"
+import type { IAuthController } from "../interfaces/IAuthController.ts"
+
+const authController = authContainer.get<IAuthController>(TYPES.IAuthController)
 
 const router = Router();
 

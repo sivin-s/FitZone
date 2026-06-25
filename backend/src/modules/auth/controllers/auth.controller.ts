@@ -14,11 +14,16 @@ import {
 import type { IAuthController } from "../interfaces/IAuthController.ts";
 import type { IAuthService } from "../interfaces/IAuthService.ts";
 
+// injection
+import {injectable, inject} from "inversify";
+import {TYPES} from "../types/types.ts"
+
+@injectable()
 export class AuthController implements IAuthController {
   constructor(
-    private _authService: IAuthService,
-    private _authRepository: AuthRepository,
-  ) { }
+    @inject(TYPES.IAuthService) private _authService: IAuthService,
+    @inject(TYPES.IAuthRepository) private _authRepository: AuthRepository,
+  ) {}
 
   register = asyncHandler(async (req: Request, res: Response) => {
     const { username, email, password } = req.body;
@@ -168,6 +173,6 @@ export class AuthController implements IAuthController {
 }
 
 // instance creation -> dependencies
-const authRepository = new AuthRepository();
-const authService = new AuthService(authRepository);
-export const authController = new AuthController(authService, authRepository);
+// const authRepository = new AuthRepository();
+// const authService = new AuthService(authRepository);
+// export const authController = new AuthController(authService, authRepository);

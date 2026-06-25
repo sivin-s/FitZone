@@ -4,7 +4,7 @@ import createAuthRefreshInterceptor from 'axios-auth-refresh';
 export const api = axios.create({
     baseURL: '/api/v1',
     withCredentials: true, // cookies
-    headers: {
+    headers: {  
         'Content-Type': 'application/json'
     }
 })

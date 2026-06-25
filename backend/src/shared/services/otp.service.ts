@@ -1,5 +1,6 @@
 import { redisClient } from "../../config/redis.ts";
 import cryto from "crypto";
+import type {IOtpService} from '../interfaces/IOtpService.ts'
 
 class OtpService {
   private readonly _OTP_PREFIX = "otp:";

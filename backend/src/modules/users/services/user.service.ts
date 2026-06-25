@@ -6,8 +6,15 @@ import { NotFoundError } from "../../../shared/errors/NotFoundError.ts";
 import { UnauthorizedError } from "../../../shared/errors/UnauthorizedError.ts";
 import { storageProvider } from "../../../shared/services/s3Storage.provider.ts";
 
+// injection
+import {injectable, inject} from "inversify"
+import {TYPES} from "../../auth/types/types.ts" // auth 
+
+@injectable()
 export class UserService implements IUserService {
-  constructor(private _authRepository: IAuthRepository) {}
+  constructor(
+   @inject(TYPES.IAuthRepository) private _authRepository: IAuthRepository
+  ) {}
 
   async getProfile(userId: string) {
     const user = await this._authRepository.findById(userId);

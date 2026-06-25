@@ -124,6 +124,6 @@ export class AdminController implements IAdminController {
 }
 
 // instance creating
-const adminRepository = new AdminRepository();
-const adminService = new AdminService(adminRepository);
-export const adminController = new AdminController(adminService);
+// const adminRepository = new AdminRepository();
+// const adminService = new AdminService(adminRepository);
+// export const adminController = new AdminController(adminService);

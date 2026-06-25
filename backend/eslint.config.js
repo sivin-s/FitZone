@@ -27,6 +27,7 @@ export default [
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
           caughtErrorsIgnorePattern: '^_',
+          endOfLine: "auto"
         },
       ],
       '@typescript-eslint/no-explicit-any': 'warn',

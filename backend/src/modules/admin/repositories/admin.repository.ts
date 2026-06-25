@@ -2,6 +2,14 @@ import User, { type IUser } from "../../auth/models/user.model.ts";
 import type { IAdminRepository } from "../interfaces/IAdminRepository.ts";
 import { storageProvider } from "../../../shared/services/s3Storage.provider.ts";
 
+// inject
+import { injectable } from "inversify";
+
+/*
+   it will tell compiler generate the necessary metadata-
+   to create the class's dependencies when th class is injected.
+*/
+@injectable()
 export class AdminRepository implements IAdminRepository {
   async findUsers(
     search?: string,
@@ -43,11 +51,28 @@ export class AdminRepository implements IAdminRepository {
   }
   async updateUser(
     userId: string,
-    data: Partial<Pick<IUser, "username" | "email" | "role" | "isBlocked" | "gender" | "phone" | "city" | "pincode" | "profilePicture">>,
+    data: Partial<
+      Pick<
+        IUser,
+        | "username"
+        | "email"
+        | "role"
+        | "isBlocked"
+        | "gender"
+        | "phone"
+        | "city"
+        | "pincode"
+        | "profilePicture"
+      >
+    >,
   ): Promise<IUser | null> {
     if (data.profilePicture) {
       const existingUser = await User.findById(userId);
-      if (existingUser && existingUser.profilePicture && existingUser.profilePicture.includes("amazonaws.com")) {
+      if (
+        existingUser &&
+        existingUser.profilePicture &&
+        existingUser.profilePicture.includes("amazonaws.com")
+      ) {
         try {
           await storageProvider.deleteFile(existingUser.profilePicture);
         } catch (err: any) {

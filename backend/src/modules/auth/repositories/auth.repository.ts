@@ -1,6 +1,11 @@
 import User, { type IUser } from "../models/user.model.ts";
 import type { IAuthRepository } from "../interfaces/IAuthRepository.ts";
 
+// injection
+import {injectable} from "inversify";
+import { AdminRepository } from '../../admin/repositories/admin.repository';
+
+@injectable()
 export class AuthRepository implements IAuthRepository {
   async findById(id: string, selectPassword?: boolean): Promise<IUser | null> {
     const query = User.findById(id);

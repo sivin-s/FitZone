@@ -3,8 +3,17 @@ import type { IAdminService } from "../interfaces/IAdminService.ts";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.ts";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.ts";
 import type { IUser } from "../../auth/models/user.model.ts";
+
+// injection
+import { injectable, inject } from "inversify";
+import { TYPES } from "../types/types.ts";
+
+@injectable()
 export class AdminService implements IAdminService {
-  constructor(private _adminRepository: IAdminRepository) {}
+  // constructor(private _adminRepository: IAdminRepository) {}
+  constructor(
+    @inject(TYPES.IAdminRepository) private _adminRepository: IAdminRepository,
+  ) {}
 
   async getUsers(search?: string, page: number = 1, limit: number = 20) {
     return await this._adminRepository.findUsers(search, page, limit);
@@ -25,7 +34,20 @@ export class AdminService implements IAdminService {
   async updateUser(
     userId: string,
     adminId: string,
-    data: Partial<Pick<IUser, "username" | "email" | "role" | "isBlocked" | "gender" | "phone" | "city" | "pincode" | "profilePicture">>,
+    data: Partial<
+      Pick<
+        IUser,
+        | "username"
+        | "email"
+        | "role"
+        | "isBlocked"
+        | "gender"
+        | "phone"
+        | "city"
+        | "pincode"
+        | "profilePicture"
+      >
+    >,
   ) {
     if (userId === adminId && data.role && data.role !== "admin") {
       throw new BadRequestError("Admins cannot change their own role.");

@@ -1,3 +1,4 @@
+import "reflect-metadata"; // meta-data for inversify after compile (js).
 import dotenv from "dotenv";
 
 dotenv.config();

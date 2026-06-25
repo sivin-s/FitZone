@@ -14,8 +14,15 @@ import type { IUserController } from "../interfaces/IUserController.ts";
 // mapper
 import { UserMapper } from "../mapper/user.mapper.ts";
 
+// injection
+import {injectable, inject} from "inversify";
+import {TYPES} from "../types/types.ts"
+
+@injectable()
 export class UserController implements IUserController {
-  constructor(private _userService: IUserService) {}
+  constructor(
+    @inject(TYPES.IUserService) private _userService: IUserService
+  ) {}
 
   getProfile = asyncHandler(
     async (req: AuthRequest, res: Response, _next: NextFunction) => {
@@ -96,6 +103,6 @@ export class UserController implements IUserController {
 }
 
 // instance DI
-const authRepository = new AuthRepository();
-const userService = new UserService(authRepository);
-export const userController = new UserController(userService);
+// const authRepository = new AuthRepository();
+// const userService = new UserService(authRepository);
+// export const userController = new UserController(userService);
