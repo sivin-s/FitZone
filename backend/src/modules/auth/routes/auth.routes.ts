@@ -22,7 +22,7 @@ router.post("/login", validate(loginSchema), authController.login);
 
 router.post("/google", authController.googleAuth);
 
-router.post("/refresh-token", authController.refreshToken);
+router.post("/refresh-token", authController.refreshToken); //call when - (retry)  after access token expired.
 
 router.post(
   "/forgot-password",

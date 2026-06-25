@@ -4,21 +4,21 @@ import { NotFoundError } from "../../../shared/errors/NotFoundError.ts";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.ts";
 import type { IUser } from "../../auth/models/user.model.ts";
 export class AdminService implements IAdminService {
-  constructor(private adminRepository: IAdminRepository) {}
+  constructor(private _adminRepository: IAdminRepository) {}
 
   async getUsers(search?: string, page: number = 1, limit: number = 20) {
-    return await this.adminRepository.findUsers(search, page, limit);
+    return await this._adminRepository.findUsers(search, page, limit);
   }
   async blockUser(userId: string, adminId: string) {
     if (userId === adminId) {
       throw new BadRequestError("You cannot block your own account");
     }
-    const user = await this.adminRepository.blockUser(userId);
+    const user = await this._adminRepository.blockUser(userId);
     if (!user) throw new NotFoundError("User not found");
     return user;
   }
   async unblockUser(userId: string) {
-    const user = await this.adminRepository.unblockUser(userId);
+    const user = await this._adminRepository.unblockUser(userId);
     if (!user) throw new NotFoundError("User not found");
     return user;
   }
@@ -30,6 +30,6 @@ export class AdminService implements IAdminService {
     if (userId === adminId && data.role && data.role !== "admin") {
       throw new BadRequestError("Admins cannot change their own role.");
     }
-    return await this.adminRepository.updateUser(userId, data);
+    return await this._adminRepository.updateUser(userId, data);
   }
 }

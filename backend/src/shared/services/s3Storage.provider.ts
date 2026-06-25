@@ -10,9 +10,9 @@ import { env } from "../../config/env.ts";
 import { logger } from "../../config/logger.ts";
 
 export class S3StorageProvider implements IStorageProvider {
-  private s3Client: S3Client;
+  private _s3Client: S3Client;
   constructor() {
-    this.s3Client = new S3Client({
+    this._s3Client = new S3Client({
       region: env.AWS_REGION,
       credentials: {
         accessKeyId: env.AWS_ACCESS_KEY_ID,
@@ -29,7 +29,7 @@ export class S3StorageProvider implements IStorageProvider {
       ContentType: file.mimetype,
     });
     try {
-      await this.s3Client.send(command);
+      await this._s3Client.send(command);
       return `https://${env.AWS_S3_BUCKET}.s3.${env.AWS_REGION}.amazonaws.com/${fileKey}`;
     } catch (error: any) {
       logger.warn(
@@ -42,7 +42,7 @@ export class S3StorageProvider implements IStorageProvider {
         ContentType: file.mimetype,
       });
       try {
-        await this.s3Client.send(retryCommand);
+        await this._s3Client.send(retryCommand);
         return `https://${env.AWS_S3_BUCKET}.s3.${env.AWS_REGION}.amazonaws.com/${fileKey}`;
       } catch (retryError: any) {
         logger.error(`S3 Upload failed: ${retryError.message}`);
@@ -65,7 +65,7 @@ export class S3StorageProvider implements IStorageProvider {
       Key: fileKey,
     });
     try {
-      await this.s3Client.send(command);
+      await this._s3Client.send(command);
     } catch (error: any) {
       logger.error("S3 Delete Failed:", error.message);
     }
@@ -84,7 +84,7 @@ export class S3StorageProvider implements IStorageProvider {
         Key: fileKey,
       });
 
-      return await getSignedUrl(this.s3Client, command, { expiresIn: 3600 });
+      return await getSignedUrl(this._s3Client, command, { expiresIn: 3600 });
     } catch (error: any) {
       logger.error(`Failed to generate presigned URL: ${error.message}`);
       return fileUrl;

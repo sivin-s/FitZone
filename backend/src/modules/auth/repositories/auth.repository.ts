@@ -62,7 +62,7 @@ export class AuthRepository implements IAuthRepository {
   ): Promise<IUser | null> {
     return await User.findByIdAndUpdate(
       userId,
-      { profilePicture },
+      { profilePicture }, // update data
       { new: true, runValidators: true },
     );
   }

@@ -7,15 +7,15 @@ import { UnauthorizedError } from "../../../shared/errors/UnauthorizedError.ts";
 import { storageProvider } from "../../../shared/services/s3Storage.provider.ts";
 
 export class UserService implements IUserService {
-  constructor(private authRepository: IAuthRepository) {}
+  constructor(private _authRepository: IAuthRepository) {}
 
   async getProfile(userId: string) {
-    const user = await this.authRepository.findById(userId);
+    const user = await this._authRepository.findById(userId);
     if (!user) throw new NotFoundError("User not found");
     return user;
   }
   async updateProfile(userId: string, updateData: Partial<IUser>) {
-    const user = await this.authRepository.findById(userId);
+    const user = await this._authRepository.findById(userId);
     if (!user) throw new NotFoundError("User not found");
 
     // prevent users from updating sensitive fields via this endpoint
@@ -30,24 +30,24 @@ export class UserService implements IUserService {
       delete safeData.gender;
     }
 
-    return await this.authRepository.updateProfile(userId, safeData);
+    return await this._authRepository.updateProfile(userId, safeData);
   }
   async changePassword(
     userId: string,
     oldPassword: string,
     newPassword: string,
   ) {
-    const user = await this.authRepository.findById(userId, true);
+    const user = await this._authRepository.findById(userId, true);
     if (!user) throw new NotFoundError("User not found");
 
     const isMatch = await user.comparePassword(oldPassword);
     if (!isMatch) throw new UnauthorizedError("Current password is incorrect");
 
-    await this.authRepository.updatePassword(userId, newPassword);
+    await this._authRepository.updatePassword(userId, newPassword);
     return { message: "Password changed successfully" };
   }
   async updateAvatar(userId: string, file: Express.Multer.File) {
-    const user = await this.authRepository.findById(userId);
+    const user = await this._authRepository.findById(userId);
     if (!user) throw new NotFoundError("User not found");
 
     const newAvatarUrl = await storageProvider.uploadFile(file, "avatars");
@@ -55,7 +55,7 @@ export class UserService implements IUserService {
     if (user.profilePicture && user.profilePicture.includes("amazonaws.com")) {
       await storageProvider.deleteFile(user.profilePicture);
     }
-    await this.authRepository.updateAvatar(userId, newAvatarUrl); // update db with new URL
+    await this._authRepository.updateAvatar(userId, newAvatarUrl); // update db with new URL
     return { profilePicture: newAvatarUrl };
   }
 }

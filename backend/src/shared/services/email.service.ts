@@ -3,9 +3,9 @@ import nodemailer from "nodemailer";
 import { env } from "../../config/env.ts";
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
+  private _transporter: nodemailer.Transporter;
   constructor() {
-    this.transporter = nodemailer.createTransport({
+    this._transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
       auth: {
@@ -21,14 +21,14 @@ class EmailService {
       from: `"${env.SMTP_FROM_NAME}" <${env.SMTP_FROM_EMAIL}>`,
       to: email,
       subject: "Your FitZone Verification OTP",
-      html: this.getOtpTemplate(
+      html: this._getOtpTemplate(
         otp,
         "Welcome to FitZone!",
         "Please use the following One-Time password (OTP ) to verify your email address:",
         "#007bff",
       ),
     };
-    await this.sendEmail(mailOptions, email, "OTP");
+    await this._sendEmail(mailOptions, email, "OTP");
   }
   async sendPasswordResetOtp(email: string, otp: string): Promise<void> {
     logger.info(`[EMAIL MOCK] Sending Password Reset OTP ${otp} to ${email}`);
@@ -36,17 +36,17 @@ class EmailService {
       from: `"${env.SMTP_FROM_NAME}" <${env.SMTP_FROM_EMAIL}>`,
       to: email,
       subject: "Reset Your FitZone password",
-      html: this.getOtpTemplate(
+      html: this._getOtpTemplate(
         otp,
         "Password Reset Request",
         "We received a request to reset your password. Use the following OTP to proceed:",
         "#dc3545",
       ),
     };
-    await this.sendEmail(mailOption, email, "Password Reset OTP");
+    await this._sendEmail(mailOption, email, "Password Reset OTP");
   }
 
-  private getOtpTemplate(
+  private _getOtpTemplate(
     otp: string,
     title: string,
     message: string,
@@ -66,13 +66,13 @@ class EmailService {
       </div>
       `;
   }
-  private async sendEmail(
+  private async _sendEmail(
     mailOptions: nodemailer.SendMailOptions,
     email: string,
     type: string,
   ): Promise<void> {
     try {
-      await this.transporter.sendMail(mailOptions);
+      await this._transporter.sendMail(mailOptions);
       logger.info(`✅ ${type} email sent successfully to ${email}`);
     } catch (error: any) {
       logger.error(

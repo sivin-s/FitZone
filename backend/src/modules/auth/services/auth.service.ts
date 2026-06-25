@@ -14,7 +14,7 @@ import type { IAuthService } from "../interfaces/IAuthService.ts";
 const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 export class AuthService implements IAuthService {
-  constructor(private authRepository: IAuthRepository) {}
+  constructor(private _authRepository: IAuthRepository) {}
 
   // google auth
 
@@ -47,25 +47,25 @@ export class AuthService implements IAuthService {
     const username = googleUser.name || email.split("@")[0];
 
     // check if user exists by Google Id
-    let user = await this.authRepository.findByGoogleId(googleId);
+    let user = await this._authRepository.findByGoogleId(googleId);
 
     if (user) {
       if (user.isBlocked)
         throw new UnauthorizedError("Your account has been blocked");
     } else {
-      const existingEmailUser = await this.authRepository.findByEmail(email);
+      const existingEmailUser = await this._authRepository.findByEmail(email);
       if (existingEmailUser) {
         if (existingEmailUser.googleId) {
           throw new ConflictError(
             "This email is already linked to a different Google account",
           );
         }
-        user = await this.authRepository.linkGoogleId(
+        user = await this._authRepository.linkGoogleId(
           existingEmailUser._id.toString(),
           googleId,
         );
       } else {
-        user = await this.authRepository.create({
+        user = await this._authRepository.create({
           username,
           email,
           googleId,
@@ -98,11 +98,11 @@ export class AuthService implements IAuthService {
   }
 
   async register(username: string, email: string, password: string) {
-    const existingUser = await this.authRepository.findByEmail(email);
+    const existingUser = await this._authRepository.findByEmail(email);
     if (existingUser) {
       throw new ConflictError("This email is already registered");
     }
-    const newUser = await this.authRepository.create({
+    const newUser = await this._authRepository.create({
       username,
       email,
       password,
@@ -118,7 +118,7 @@ export class AuthService implements IAuthService {
   }
 
   async verifyOtp(email: string, otp: string) {
-    const user = await this.authRepository.findByEmail(email);
+    const user = await this._authRepository.findByEmail(email);
     if (!user) throw new BadRequestError("User not found");
     if (user.isVerified) throw new BadRequestError("User is already verified");
 
@@ -127,7 +127,7 @@ export class AuthService implements IAuthService {
       throw new BadRequestError("Invalid or expired OTP");
     }
 
-    await this.authRepository.updateVerificationStatus(
+    await this._authRepository.updateVerificationStatus(
       user._id.toString(),
       true,
     );
@@ -137,7 +137,7 @@ export class AuthService implements IAuthService {
   }
 
   async resendOtp(email: string) {
-    const user = await this.authRepository.findByEmail(email);
+    const user = await this._authRepository.findByEmail(email);
     if (!user) throw new BadRequestError("User not found");
     if (user.isVerified) throw new BadRequestError("User is already verified");
 
@@ -149,7 +149,7 @@ export class AuthService implements IAuthService {
   }
 
   async login(email: string, password: string) {
-    const user = await this.authRepository.findByEmail(email);
+    const user = await this._authRepository.findByEmail(email);
     if (!user) throw new UnauthorizedError("Invalid email or password");
     if (user.isBlocked) {
       throw new UnauthorizedError("Your account has been blocked by the admin");
@@ -186,7 +186,7 @@ export class AuthService implements IAuthService {
   }
 
   async forgotPassword(email: string) {
-    const user = await this.authRepository.findByEmail(email);
+    const user = await this._authRepository.findByEmail(email);
     if (!user) {
       return {
         message: "If an account with this email exists, an OTP has been sent",
@@ -201,7 +201,7 @@ export class AuthService implements IAuthService {
   }
 
   async resetPassword(email: string, otp: string, newPassword: string) {
-    const user = await this.authRepository.findByEmail(email);
+    const user = await this._authRepository.findByEmail(email);
     if (!user) throw new BadRequestError("Invalid request");
 
     const storedOtp = await otpService.getOtp(email);
@@ -209,7 +209,7 @@ export class AuthService implements IAuthService {
       throw new BadRequestError("Invalid or expired OTP.");
     }
 
-    await this.authRepository.updatePassword(user._id.toString(), newPassword);
+    await this._authRepository.updatePassword(user._id.toString(), newPassword);
     await otpService.deleteOtp(email);
 
     return { message: "Password reset successfully" };

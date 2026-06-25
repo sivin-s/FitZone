@@ -7,7 +7,7 @@ import multer from "multer";
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.use(authenticate, authorizeRoles("admin"));
+router.use(authenticate, authorizeRoles("admin")); // router level middleware - notice: each route have different router level middlewares.
 
 router.get("/users", adminController.getUsers);
 router.patch("/users/:userId/block", adminController.blockUser);

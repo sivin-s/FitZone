@@ -15,11 +15,11 @@ import type { IUserController } from "../interfaces/IUserController.ts";
 import { UserMapper } from "../mapper/user.mapper.ts";
 
 export class UserController implements IUserController {
-  constructor(private userService: IUserService) {}
+  constructor(private _userService: IUserService) {}
 
   getProfile = asyncHandler(
     async (req: AuthRequest, res: Response, _next: NextFunction) => {
-      const user = await this.userService.getProfile(
+      const user = await this._userService.getProfile(
         req.user?.userId as string,
       );
       if (!user) {
@@ -42,7 +42,7 @@ export class UserController implements IUserController {
 
   updateProfile = asyncHandler(
     async (req: AuthRequest, res: Response, _next: NextFunction) => {
-      const result = await this.userService.updateProfile(
+      const result = await this._userService.updateProfile(
         req.user?.userId as string,
         req.body,
       );
@@ -63,7 +63,7 @@ export class UserController implements IUserController {
   changePassword = asyncHandler(
     async (req: AuthRequest, res: Response, _next: NextFunction) => {
       const { oldPassword, newPassword } = req.body;
-      const result = await this.userService.changePassword(
+      const result = await this._userService.changePassword(
         req.user?.userId as string,
         oldPassword,
         newPassword,
@@ -77,7 +77,7 @@ export class UserController implements IUserController {
       if (!req.file)
         throw new BadRequestError("No file uploaded. Please provide an image");
 
-      const result = await this.userService.updateAvatar(
+      const result = await this._userService.updateAvatar(
         req.user?.userId as string,
         req.file,
       );

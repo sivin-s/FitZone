@@ -14,7 +14,7 @@ class JwtService {
     } as SignOptions);
   }
   verifyAccessToken(token: string): AuthPayload {
-    return jwt.verify(token, env.JWT_ACCESS_SECRET) as AuthPayload;
+    return jwt.verify(token, env.JWT_ACCESS_SECRET) as AuthPayload; // returns decoded result
   }
   verifyRefreshToken(token: string): AuthPayload {
     return jwt.verify(token, env.JWT_REFRESH_SECRET) as AuthPayload;

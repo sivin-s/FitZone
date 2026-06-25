@@ -3,9 +3,13 @@ import { asyncHandler } from "../shared/handlers/asyncHandler.ts";
 import { UnauthorizedError } from "../shared/errors/UnauthorizedError.ts";
 import { jwtService } from "../shared/services/jwt.service.ts";
 import type { AuthRequest, AuthPayload } from "../types/index.ts";
+import { logger } from "../config/logger.ts";
 
 const extractToken = (req: Request): string | null => {
   const cookieToken = req.cookies?.accessToken;
+
+  logger.debug(`cookie:  ${req.cookies}`);
+
   if (typeof cookieToken === "string" && cookieToken.trim() !== "") {
     return cookieToken;
   }

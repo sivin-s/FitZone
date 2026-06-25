@@ -12,12 +12,12 @@ import { UserMapper } from "../../users/mapper/user.mapper.ts";
 import { storageProvider } from "../../../shared/services/s3Storage.provider.ts";
 
 export class AdminController implements IAdminController {
-  constructor(private adminService: IAdminService) { }
+  constructor(private _adminService: IAdminService) {}
 
   getUsers = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       const { search, page = 1, limit = 20 } = req.query;
-      const result = await this.adminService.getUsers(
+      const result = await this._adminService.getUsers(
         search as string | undefined,
         Number(page),
         Number(limit),
@@ -50,7 +50,7 @@ export class AdminController implements IAdminController {
     ): Promise<void> => {
       const { userId } = req.params;
       const adminId = req.user?.userId;
-      const result = await this.adminService.blockUser(
+      const result = await this._adminService.blockUser(
         userId as string,
         adminId as string,
       );
@@ -65,7 +65,7 @@ export class AdminController implements IAdminController {
   unblockUser = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       const { userId } = req.params;
-      const result = await this.adminService.unblockUser(userId as string);
+      const result = await this._adminService.unblockUser(userId as string);
       res.status(200).json(
         new ApiResponse(200, "User unblocked successfully", {
           isBlocked: result.isBlocked,
@@ -92,7 +92,7 @@ export class AdminController implements IAdminController {
         profilePictureUrl = await storageProvider.uploadFile(req.file, "avatars");
       }
 
-      const updateUser = await this.adminService.updateUser(
+      const updateUser = await this._adminService.updateUser(
         userId as string,
         adminId as string,
         {

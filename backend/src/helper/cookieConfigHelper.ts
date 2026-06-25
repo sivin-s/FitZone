@@ -5,7 +5,7 @@ export const getAccessTokenOptions = () => ({
   secure: env.NODE_ENV === "production",
   sameSite: "strict" as const,
   maxAge: 15 * 60 * 1000, //15m
-  path: "/",
+  path: "/", // cookies send by the browser '/' means all routes eg: /profile, /dashboard, /admin.
 });
 
 export const getRefreshTokenOptions = () => ({
@@ -13,5 +13,5 @@ export const getRefreshTokenOptions = () => ({
   secure: env.NODE_ENV === "production",
   sameSite: "strict" as const,
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7d's
-  path: "/",
+  path: "/", // cookies send by the browser '/' means all routes.
 });

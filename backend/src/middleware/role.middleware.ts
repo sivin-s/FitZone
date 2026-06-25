@@ -4,10 +4,10 @@ import { AppError } from "../shared/errors/AppError.ts";
 import type { AuthRequest } from "../types/index.ts";
 
 export const authorizeRoles = (
-  ...allowedRoles: Array<"user" | "trainer" | "admin"> // convert input to array using rest operator.
+  ...allowedRoles: Array<"user" | "trainer" | "admin"> // gets [] convert input to array using rest operator.
 ) => {
   // ["admin"] or ["admin","user"] -> through rest operator.
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {  // this cb get execute after auth middleware (so req.user is always present).
     if (!req.user) {
       throw new UnauthorizedError("Authentication required.");
     }
