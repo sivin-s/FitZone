@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config(); // eject env into memory first(runtime) then zod operation.
 
 const envSchema = z.object({
   // schema like mongoose..
@@ -33,7 +33,7 @@ const envSchema = z.object({
   AWS_S3_BUCKET: z.string(),
 });
 
-const parsedEnv = envSchema.safeParse(process.env);
+const parsedEnv = envSchema.safeParse(process.env); // .env
 
 if (!parsedEnv.success) {
   console.error(

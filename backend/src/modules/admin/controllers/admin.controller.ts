@@ -13,8 +13,15 @@ import { storageProvider } from "../../../shared/services/s3Storage.provider.ts"
 
 // zod dto
 import type { UpdateUserRequestDto } from "../schemas/updateUser.schema.ts"
+import { injectable,inject } from "inversify";
+
+import {TYPES} from '../types/types.ts'
+
+@injectable()
 export class AdminController implements IAdminController {
-  constructor(private _adminService: IAdminService) { }
+  constructor(
+   @inject(TYPES.IAdminService) private _adminService: IAdminService
+  ) {}
 
   getUsers = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction): Promise<void> => {

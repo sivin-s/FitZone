@@ -6,11 +6,14 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage() }); // server memory for temporary - before uploading to provider.
 
 // injection
-import { userContainer } from "../DI/container.ts";
+// import { userContainer } from "../DI/container.ts";
+import { appContainer } from "../../../shared/DI/container.ts";
 import {TYPES} from "../types/types.ts"
 import type { IUserController } from "../interfaces/IUserController.ts";
 
-const userController = userContainer.get<IUserController>(TYPES.IUserController)
+// const userController = userContainer.get<IUserController>(TYPES.IUserController)
+
+const userController = appContainer.get<IUserController>(TYPES.IUserController)
 
 router.use(authenticate);
 

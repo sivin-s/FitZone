@@ -8,6 +8,7 @@ import { logger } from "../config/logger.ts";
 const extractToken = (req: Request): string | null => {
   const cookieToken = req.cookies?.accessToken;
 
+  // TODO: remove this log fn().
   logger.debug(`cookie:  ${req.cookies}`);
 
   if (typeof cookieToken === "string" && cookieToken.trim() !== "") {

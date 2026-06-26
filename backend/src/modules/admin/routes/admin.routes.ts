@@ -5,12 +5,14 @@ import multer from "multer";
 
 // injection
 import { adminContainer } from "../DI/container.ts"
+import { appContainer } from "../../../shared/DI/container.ts";
 import { TYPES } from "../types/types.ts"
 import type { IAdminController } from "../interfaces/IAdminController.ts";
 import { validate } from "../../../middleware/validate.middleware.ts";
 import { updateUserSchema } from "../schemas/updateUser.schema.ts";
 
-const adminController = adminContainer.get<IAdminController>(TYPES.IAdminController)
+// const adminController = adminContainer.get<IAdminController>(TYPES.IAdminController)
+const adminController = appContainer.get<IAdminController>(TYPES.IAdminController);
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });

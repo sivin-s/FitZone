@@ -9,14 +9,20 @@ import { storageProvider } from "../../../shared/services/s3Storage.provider.ts"
 // injection
 import {injectable, inject} from "inversify"
 import {TYPES} from "../../auth/types/types.ts" // auth 
+import {TYPES as LOGGER_TYPES} from "../../../Logger/types/types.logger.ts"
+import type { ILogger } from "../../../shared/interfaces/ILogger.ts";
 
 @injectable()
 export class UserService implements IUserService {
   constructor(
-   @inject(TYPES.IAuthRepository) private _authRepository: IAuthRepository
+   @inject(TYPES.IAuthRepository) private _authRepository: IAuthRepository,
+   @inject(LOGGER_TYPES.ILogger) private _logger: ILogger
   ) {}
 
   async getProfile(userId: string) {
+    // log
+    this._logger.info(`Fetching profile for user:" ${userId}`)
+
     const user = await this._authRepository.findById(userId);
     if (!user) throw new NotFoundError("User not found");
     return user;
@@ -32,10 +38,8 @@ export class UserService implements IUserService {
     delete safeData.isBlocked;
     delete safeData.isVerified;
     delete safeData.googleId;
-
-    if (safeData.gender === "" || safeData.gender === null) {
-      delete safeData.gender;
-    }
+    delete safeData.gender;
+  
 
     return await this._authRepository.updateProfile(userId, safeData);
   }
