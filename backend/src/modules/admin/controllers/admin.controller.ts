@@ -11,8 +11,10 @@ import type { IAdminService } from "../interfaces/IAdminService.ts";
 import { UserMapper } from "../../users/mapper/user.mapper.ts";
 import { storageProvider } from "../../../shared/services/s3Storage.provider.ts";
 
+// zod dto
+import type { UpdateUserRequestDto } from "../schemas/updateUser.schema.ts"
 export class AdminController implements IAdminController {
-  constructor(private _adminService: IAdminService) {}
+  constructor(private _adminService: IAdminService) { }
 
   getUsers = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
@@ -79,33 +81,42 @@ export class AdminController implements IAdminController {
       req: AuthRequest,
       res: Response,
       _next: NextFunction,
-    ): Promise<void> => {
-      // admin
-      const adminId = req.user?.userId;
-      const { userId } = req.params;
-      const { username, email, role, isBlocked, gender, phone, city, pincode } = req.body;
+    ): Promise<void> => { 
+      // dto using zod
+      const data = req.body as UpdateUserRequestDto;  // incoming dto
 
-      const parsedIsBlocked = isBlocked === "true" ? true : isBlocked === "false" ? false : undefined;
-
-      let profilePictureUrl = undefined;
-      if (req.file) {
-        profilePictureUrl = await storageProvider.uploadFile(req.file, "avatars");
+      const serviceData: UpdateUserRequestDto = {
+        ...data,
+        isBlocked: data.isBlocked !== undefined ? Boolean(data.isBlocked): undefined
       }
 
+      // admin
+      // const adminId = req.user?.userId;
+      // const { userId } = req.params;
+      // const { username, email, role, isBlocked, gender, phone, city, pincode } = data;
+
+      // const parsedIsBlocked = isBlocked === "true" ? true : isBlocked === "false" ? false : undefined;
+
+      // let profilePictureUrl = undefined;
+      // if (req.file) {
+      //   profilePictureUrl = await storageProvider.uploadFile(req.file, "avatars");
+      // }
+
       const updateUser = await this._adminService.updateUser(
-        userId as string,
-        adminId as string,
-        {
-          username,
-          email,
-          role,
-          isBlocked: parsedIsBlocked,
-          gender,
-          phone,
-          city,
-          pincode,
-          ...(profilePictureUrl && { profilePicture: profilePictureUrl }),
-        },
+        userId,
+        adminId,
+        // {
+        //   username,
+        //   email,
+        //   role,
+        //   isBlocked: parsedIsBlocked,
+        //   gender,
+        //   phone,
+        //   city,
+        //   pincode,
+        //   ...(profilePictureUrl && { profilePicture: profilePictureUrl }),
+        // },
+        serviceData
       );
       if (!updateUser) {
         throw new NotFoundError("User not found");
