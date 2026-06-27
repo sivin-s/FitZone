@@ -6,7 +6,7 @@ import type { IUser } from "../../auth/models/user.model.ts";
 
 // injection
 import { injectable, inject } from "inversify";
-import { TYPES } from "../types/types.ts";
+import { TYPES } from "../../../DITypes/admin.types.ts";
 
 @injectable()
 export class AdminService implements IAdminService {

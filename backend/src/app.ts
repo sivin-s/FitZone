@@ -11,8 +11,8 @@ import userRoutes from "./modules/users/routes/user.routes.ts";
 import { env } from "./config/env.ts";
 
 // middleware
-import { notFoundMiddleware } from "./middleware/not-found.middleware.ts";
-import { errorMiddleware } from "./middleware/error.middleware.ts";
+import { notFoundMiddleware } from "./shared/middleware/not-found.middleware.ts";
+import { errorMiddleware } from "./shared/middleware/error.middleware.ts";
 
 const app: Application = express();
 

@@ -1,11 +1,10 @@
 import type { Request, Response } from "express";
-import { asyncHandler } from "../../../shared/handlers/asyncHandler.ts";
-import { ApiResponse } from "../../../shared/responses/ApiResponse.ts";
-import { AuthService } from "../services/auth.service.ts";
+import { asyncHandler } from "../../../shared/handler/asyncHandler.ts";
+import { ApiResponse } from "../../../shared/response/ApiResponse.ts";
 import { AuthRepository } from "../repositories/auth.repository.ts";
 import { jwtService } from "../../../shared/services/jwt.service.ts";
 import { UnauthorizedError } from "../../../shared/errors/UnauthorizedError.ts";
-import type { AuthPayload } from "../../../types/index.ts";
+import type { AuthPayload } from "../../../types/AuthRequest.types.ts";
 import {
   getAccessTokenOptions,
   getRefreshTokenOptions,
@@ -16,13 +15,13 @@ import type { IAuthService } from "../interfaces/IAuthService.ts";
 
 // injection
 import {injectable, inject} from "inversify";
-import {TYPES} from "../types/types.ts"
+import {AUTH_TYPES} from "../../../DITypes/index.ts"
 
 @injectable()
 export class AuthController implements IAuthController {
   constructor(
-    @inject(TYPES.IAuthService) private _authService: IAuthService,
-    @inject(TYPES.IAuthRepository) private _authRepository: AuthRepository,
+    @inject(AUTH_TYPES.IAuthService) private _authService: IAuthService,
+    @inject(AUTH_TYPES.IAuthRepository) private _authRepository: AuthRepository,
   ) {}
 
   register = asyncHandler(async (req: Request, res: Response) => {

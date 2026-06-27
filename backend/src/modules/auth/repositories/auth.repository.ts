@@ -4,50 +4,51 @@ import type { IAuthRepository } from "../interfaces/IAuthRepository.ts";
 // injection
 import {injectable} from "inversify";
 import { AdminRepository } from '../../admin/repositories/admin.repository';
+import { BaseRepository } from "../../../common/repositories/BaseRepository.ts";
 
-@injectable()
-export class AuthRepository implements IAuthRepository {
-  async findById(id: string, selectPassword?: boolean): Promise<IUser | null> {
-    const query = User.findById(id);
-    if (selectPassword) {
-      query.select("+password");
-    }
-    return await query;
+// @injectable()
+export class AuthRepository extends BaseRepository<IUser>  implements IAuthRepository {
+
+  constructor(){
+    super(User) // pass modal
   }
+
+
   async findByEmail(email: string): Promise<IUser | null> {
-    return await User.findOne({ email }).select("+password");
+    return super.findOne({email},"+password"); // override the parent method behavior.
   }
-  async create(userData: Partial<IUser>): Promise<IUser> {
-    return await User.create(userData);
+
+  async findByIdWithPassword(id: string): Promise<IUser | null> {
+    return this.findOne({ _id: id },"+password");
   }
+ 
   async updateVerificationStatus(
     userId: string,
     isVerified: boolean,
   ): Promise<IUser | null> {
-    return await User.findByIdAndUpdate(
-      userId,
+    return this.update(
+       userId,
       { isVerified }, // updating data
-      { new: true, runValidators: true },
     );
   }
   async updatePassword(
     userId: string,
     newPassword: string,
   ): Promise<IUser | null> {
-    const user = await User.findById(userId).select("+password");
+    const user = await this.findByIdWithPassword(userId);
     if (!user) return null;
     user.password = newPassword;
     await user.save();
     return user;
   }
+
   async findByGoogleId(googleId: string): Promise<IUser | null> {
-    return await User.findOne({ googleId });
+    return this.findOne({ googleId });
   }
   async linkGoogleId(userId: string, googleId: string): Promise<IUser | null> {
-    return await User.findByIdAndUpdate(
+    return this.update(
       userId,
       { googleId, isVerified: true }, // update
-      { new: true, runValidators: true },
     );
   }
 
@@ -55,20 +56,16 @@ export class AuthRepository implements IAuthRepository {
     userId: string,
     updateData: Partial<IUser>,
   ): Promise<IUser | null> {
-    return await User.findByIdAndUpdate(userId, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    return this.update(userId, updateData);
   }
 
   async updateAvatar(
     userId: string,
     profilePicture: string,
   ): Promise<IUser | null> {
-    return await User.findByIdAndUpdate(
+    return this.update(
       userId,
       { profilePicture }, // update data
-      { new: true, runValidators: true },
     );
   }
 }

@@ -14,8 +14,6 @@ export interface IUser extends Document {
   phone?: string;
   city?: string;
   pincode?: string;
-  otp?: string;
-  otpExpiry?: Date;
   isPremium: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -114,6 +112,7 @@ userSchema.methods.comparePassword = async function (
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
+// model is bridge it take schema object it give access mongoose method for connection.
 const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
 
 export default User;

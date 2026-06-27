@@ -1,7 +1,7 @@
 import type { NextFunction, Response } from "express";
-import { UnauthorizedError } from "../shared/errors/UnauthorizedError.ts";
-import { AppError } from "../shared/errors/AppError.ts";
-import type { AuthRequest } from "../types/index.ts";
+import { UnauthorizedError } from "../errors/UnauthorizedError.ts";
+import { AppError } from "../errors/AppError.ts";
+import type { AuthRequest } from "../../types/AuthRequest.types.ts";
 
 export const authorizeRoles = (
   ...allowedRoles: Array<"user" | "trainer" | "admin"> // gets [] convert input to array using rest operator.

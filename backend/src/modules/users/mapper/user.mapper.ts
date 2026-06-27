@@ -1,5 +1,5 @@
 import type { IUser } from "../../auth/models/user.model";
-import type { UserDto } from "../DTO/user.dto";
+import type { UserDto } from "../dto/user.dto";
 
 export class UserMapper {
   static toDto(user: IUser): UserDto {

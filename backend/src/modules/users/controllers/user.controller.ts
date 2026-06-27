@@ -1,9 +1,9 @@
 import type { Response, NextFunction } from "express";
-import { asyncHandler } from "../../../shared/handlers/asyncHandler.ts";
-import { ApiResponse } from "../../../shared/responses/ApiResponse.ts";
+import { asyncHandler } from "../../../shared/handler/asyncHandler.ts";
+import { ApiResponse } from "../../../shared/response/ApiResponse.ts";
 import { UserService } from "../services/user.service.ts";
 import { AuthRepository } from "../../auth/repositories/auth.repository.ts";
-import type { AuthRequest } from "../../../types/index.ts";
+import type { AuthRequest } from "../../../types/AuthRequest.types.ts";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.ts";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.ts";
 import { storageProvider } from "../../../shared/services/s3Storage.provider.ts";
@@ -16,7 +16,7 @@ import { UserMapper } from "../mapper/user.mapper.ts";
 
 // injection
 import {injectable, inject} from "inversify";
-import {TYPES} from "../types/types.ts"
+import { USER_TYPES as TYPES } from "../../../DITypes/index.ts";
 
 @injectable()
 export class UserController implements IUserController {

@@ -8,14 +8,13 @@ import { storageProvider } from "../../../shared/services/s3Storage.provider.ts"
 
 // injection
 import {injectable, inject} from "inversify"
-import {TYPES} from "../../auth/types/types.ts" // auth 
-import {TYPES as LOGGER_TYPES} from "../../../Logger/types/types.logger.ts"
+import {AUTH_TYPES,LOGGER_TYPES} from "../../../DITypes/index.ts"
 import type { ILogger } from "../../../shared/interfaces/ILogger.ts";
 
 @injectable()
 export class UserService implements IUserService {
   constructor(
-   @inject(TYPES.IAuthRepository) private _authRepository: IAuthRepository,
+   @inject(AUTH_TYPES.IAuthRepository) private _authRepository: IAuthRepository,
    @inject(LOGGER_TYPES.ILogger) private _logger: ILogger
   ) {}
 
@@ -48,7 +47,7 @@ export class UserService implements IUserService {
     oldPassword: string,
     newPassword: string,
   ) {
-    const user = await this._authRepository.findById(userId, true);
+    const user = await this._authRepository.findByIdWithPassword(userId);
     if (!user) throw new NotFoundError("User not found");
 
     const isMatch = await user.comparePassword(oldPassword);

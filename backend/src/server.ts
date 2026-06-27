@@ -5,7 +5,17 @@ dotenv.config();
 
 import app from "./app.ts";
 import { connectDB } from "./config/database.ts";
-import { logger } from "./config/logger.ts";
+
+// DI container 
+import {appContainer} from './DiContainer.ts'
+
+// type
+import {LOGGER_TYPES} from './DITypes/index.ts'
+import type {ILogger} from './shared/interfaces/ILogger.ts'
+
+// retrieve the singleton LoggerService from the DI container
+const logger = appContainer.get<ILogger>(LOGGER_TYPES.ILogger)
+
 
 const PORT = process.env.PORT || 8080;
 

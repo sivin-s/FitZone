@@ -1,7 +1,7 @@
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { env } from "../../config/env.ts";
-import type { AuthPayload } from "../../types/index.ts";
-import type { IJwtService } from "../interfaces/IJWTService.ts";
+import type { AuthPayload } from "../../types/AuthRequest.types.ts";
+import type { IJwtService } from "../interfaces/IJwtService.ts";
 class JwtService implements IJwtService {
   generateAccessToken(payload: AuthPayload): string {
     return jwt.sign(payload, env.JWT_ACCESS_SECRET, {

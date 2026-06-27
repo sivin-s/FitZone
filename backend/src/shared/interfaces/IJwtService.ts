@@ -1,4 +1,4 @@
-import type { AuthPayload } from "../../types";
+import type { AuthPayload } from "../../types/AuthRequest.types";
 
 export interface IJwtService{
   generateAccessToken(

@@ -1,9 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
-import { asyncHandler } from "../../../shared/handlers/asyncHandler.ts";
-import { ApiResponse } from "../../../shared/responses/ApiResponse.ts";
-import { AdminService } from "../services/admin.service.ts";
-import { AdminRepository } from "../repositories/admin.repository.ts";
-import type { AuthRequest } from "../../../types/index.ts";
+import { asyncHandler } from "../../../shared/handler/asyncHandler.ts";
+import { ApiResponse } from "../../../shared/response/ApiResponse.ts";
+import type { AuthRequest } from "../../../types/AuthRequest.types.ts";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.ts";
 
 import type { IAdminController } from "../interfaces/IAdminController.ts";
@@ -15,7 +13,7 @@ import { storageProvider } from "../../../shared/services/s3Storage.provider.ts"
 import type { UpdateUserRequestDto } from "../schemas/updateUser.schema.ts"
 import { injectable,inject } from "inversify";
 
-import {TYPES} from '../types/types.ts'
+import {TYPES} from '../../../DITypes/admin.types.ts'
 
 @injectable()
 export class AdminController implements IAdminController {
@@ -92,14 +90,16 @@ export class AdminController implements IAdminController {
       // dto using zod
       const data = req.body as UpdateUserRequestDto;  // incoming dto
 
-      const serviceData: UpdateUserRequestDto = {
+      const serviceData = {
         ...data,
+        role: data.role as "admin" | "user" | "trainer" | undefined,
+        gender: data.gender as "Male" | "Female" | "Other" | undefined,
         isBlocked: data.isBlocked !== undefined ? Boolean(data.isBlocked): undefined
       }
 
       // admin
-      // const adminId = req.user?.userId;
-      // const { userId } = req.params;
+      const adminId = req.user?.userId as string;
+      const userId = req.params?.userId as string;
       // const { username, email, role, isBlocked, gender, phone, city, pincode } = data;
 
       // const parsedIsBlocked = isBlocked === "true" ? true : isBlocked === "false" ? false : undefined;

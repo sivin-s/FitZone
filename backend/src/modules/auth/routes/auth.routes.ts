@@ -1,7 +1,7 @@
 import { Router } from "express";
 
-import { validate } from "../../../middleware/validate.middleware.ts";
-import { authenticate } from "../../../middleware/auth.middleware.ts";
+import { validate } from "../../../shared/middleware/validate.middleware.ts";
+import { authenticate } from "../../../shared/middleware/auth.middleware.ts";
 
 import { registerSchema } from "../schemas/register.schema.ts";
 import { loginSchema } from "../schemas/login.schema.ts";
@@ -11,13 +11,11 @@ import { forgotPasswordSchema } from "../schemas/forgotPassword.schema.ts";
 import { resetPasswordSchema } from "../schemas/resetPassword.schema.ts";
 
 // injection
-// import {authContainer} from "../DI/container.ts";
-import { appContainer } from "../../../shared/DI/container.ts";
-import {TYPES} from "../types/types.ts"
+import { appContainer } from "../../../DiContainer.ts";
+import {AUTH_TYPES} from "../../../DITypes/index.ts"
 import type { IAuthController } from "../interfaces/IAuthController.ts"
 
-// const authController = authContainer.get<IAuthController>(TYPES.IAuthController)
-const authController  = appContainer.get<IAuthController>(TYPES.IAuthController)
+const authController  = appContainer.get<IAuthController>(AUTH_TYPES.IAuthController)
 
 const router = Router();
 

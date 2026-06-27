@@ -15,7 +15,7 @@ const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 // injection
 import {injectable, inject} from "inversify"
-import {TYPES} from "../types/types.ts"
+import { AUTH_TYPES as TYPES } from "../../../DITypes/index.ts";
 
 @injectable()
 export class AuthService implements IAuthService {

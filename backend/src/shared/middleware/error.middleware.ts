@@ -1,9 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
-import { AppError } from "../shared/errors/AppError.ts";
-import { logger } from "../config/logger.ts";
-import { env } from "../config/env.ts";
-import { ErrorName, HttpStatus } from "../shared/enums/error.enums.ts";
+import { AppError } from "../../shared/errors/AppError.ts";
+import { env } from "../../config/env.ts";
+import { ErrorName, HttpStatus } from "../enums/error.enums.ts";
+import { logger } from "../../config/logger.ts";
 
 export const errorMiddleware = (
   error: unknown,
