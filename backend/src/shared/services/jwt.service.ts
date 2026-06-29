@@ -4,12 +4,14 @@ import type { AuthPayload } from "../../types/AuthRequest.types.ts";
 import type { IJwtService } from "../interfaces/IJwtService.ts";
 class JwtService implements IJwtService {
   generateAccessToken(payload: AuthPayload): string {
-    return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
+    const { exp, iat, ...cleanPayload } = payload; // to prevent conflict between expiresIn and exp after decode  recreate new token.
+    return jwt.sign(cleanPayload, env.JWT_ACCESS_SECRET, {
       expiresIn: env.ACCESS_TOKEN_EXPIRES_IN,
     } as SignOptions);
   }
   generateRefreshToken(payload: AuthPayload): string {
-    return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
+    const { exp, iat, ...cleanPayload } = payload; // to prevent conflict between expiresIn and exp after decode  recreate new token.
+    return jwt.sign(cleanPayload, env.JWT_REFRESH_SECRET, {
       expiresIn: env.REFRESH_TOKEN_EXPIRES_IN,
     } as SignOptions);
   }

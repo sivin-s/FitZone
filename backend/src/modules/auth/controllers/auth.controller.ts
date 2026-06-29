@@ -112,10 +112,10 @@ export class AuthController implements IAuthController {
       payload = jwtService.verifyRefreshToken(refreshToken) as AuthPayload; // verifying refresh token
     } catch (_error) {
       // expired or tampered -> clear the cookies & reject access
-      res.clearCookie("userRefreshToken", { path: "/", expires: new Date(0) });
-      res.clearCookie("userAccessToken", { path: "/", expires: new Date(0) });
-      res.clearCookie("adminRefreshToken", { path: "/", expires: new Date(0) });
-      res.clearCookie("adminAccessToken", { path: "/", expires: new Date(0) });
+      res.clearCookie("userRefreshToken", { path: "/", maxAge:0  });
+      res.clearCookie("userAccessToken", { path: "/", maxAge:0  });
+      res.clearCookie("adminRefreshToken", { path: "/", maxAge:0  });
+      res.clearCookie("adminAccessToken", { path: "/", maxAge:0  });
       throw new UnauthorizedError("Invalid or expired refresh token");
     }
 
@@ -124,6 +124,7 @@ export class AuthController implements IAuthController {
       role === "admin" ? "adminAccessToken" : "userAccessToken"; // dynamically creating access token key(name).
 
     // generate a brand new access token
+    // notice rm the 'exp' from decode jwt token it creates conflict during regenerate token.
     const newAccessToken = jwtService.generateAccessToken(payload);
     res.cookie(accessTokenKey, newAccessToken, getAccessTokenOptions());
     res

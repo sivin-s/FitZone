@@ -8,10 +8,10 @@ import type { AuthRequest, AuthPayload } from "../../types/AuthRequest.types.ts"
 import {logger} from '../../config/logger.ts'
 
 const extractToken = (req: Request): string | null => {
-  const cookieToken = req.cookies?.accessToken;
+  const cookieToken = req.cookies?.userAccessToken;
 
   // TODO: remove this log fn().
-  logger.debug(`cookie:  ${req.cookies}`);
+  logger.debug(`cookie:  ${JSON.stringify(req.cookies)}`);
 
   if (typeof cookieToken === "string" && cookieToken.trim() !== "") {
     return cookieToken;
@@ -34,6 +34,7 @@ export const authenticate = asyncHandler(
     } catch (_error) {
       throw new UnauthorizedError("Invalid or expired access token.");
     }
+    logger.debug("payload >>", payload)
     req.user = payload;
     next();
   },

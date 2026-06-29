@@ -1,16 +1,9 @@
 import nodemailer from "nodemailer";
 import { env } from "../../config/env.ts";
-import type{ IEmailService } from "../interfaces/IEmailService.ts";
-import { injectable,inject } from "inversify";
-
-// types
-import { LOGGER_TYPES } from "../../DITypes/index.ts";
-import type {ILogger} from '../../shared/interfaces/ILogger.ts'
-
-@injectable()
+import type { IEmailService } from "../interfaces/IEmailService.ts";
+import {logger} from '../../config/logger.ts'
 class EmailService implements IEmailService {
   private _transporter: nodemailer.Transporter;
-  @inject(LOGGER_TYPES.ILogger) private _logger!: ILogger;
   constructor() {
     this._transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
@@ -23,7 +16,7 @@ class EmailService implements IEmailService {
   }
 
   async sendOtp(email: string, otp: string): Promise<void> {
-    this._logger.info(`[EMAIL MOCK] Sending OTP ${otp} to ${email}`);
+    logger.info(`[EMAIL MOCK] Sending OTP ${otp} to ${email}`);
     const mailOptions = {
       from: `"${env.SMTP_FROM_NAME}" <${env.SMTP_FROM_EMAIL}>`,
       to: email,
@@ -38,7 +31,7 @@ class EmailService implements IEmailService {
     await this._sendEmail(mailOptions, email, "OTP");
   }
   async sendPasswordResetOtp(email: string, otp: string): Promise<void> {
-    this._logger.info(`[EMAIL MOCK] Sending Password Reset OTP ${otp} to ${email}`);
+    logger.info(`[EMAIL MOCK] Sending Password Reset OTP ${otp} to ${email}`);
     const mailOption = {
       from: `"${env.SMTP_FROM_NAME}" <${env.SMTP_FROM_EMAIL}>`,
       to: email,
@@ -80,9 +73,9 @@ class EmailService implements IEmailService {
   ): Promise<void> {
     try {
       await this._transporter.sendMail(mailOptions);
-      this._logger.info(`✅ ${type} email sent successfully to ${email}`);
+      logger.info(`✅ ${type} email sent successfully to ${email}`);
     } catch (error: any) {
-      this._logger.error(
+      logger.error(
         `❌ Failed to send ${type} email to ${email}`,
         error.message,
       );
