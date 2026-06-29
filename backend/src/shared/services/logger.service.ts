@@ -8,6 +8,12 @@ import { pid } from 'process';
 // log 
 import pinoPretty from 'pino-pretty';
 
+import {__filename} from '../../helper/getFilePath/getFilePath'
+import {fullDirPath} from '../../helper/getDirectoryPath/getDirectoryPath'
+
+// file path
+const pathOfFile = __filename(import.meta.url);
+const dirOfFile = fullDirPath(pathOfFile,"../../logs")
 @injectable() // decorator tells to compile  register the class
 export class LoggerService implements ILogger{
     private adminLogger: Logger;
@@ -15,7 +21,10 @@ export class LoggerService implements ILogger{
 
 
     constructor(){
-        const logDir = path.join(__dirname,"../../logs");
+        const logDir = dirOfFile;
+        if(!logDir){
+            return;
+        }
         // create logs directory if it doesn't exist
         if(!fs.existsSync(logDir)){
             fs.mkdirSync(logDir,{recursive: true});
