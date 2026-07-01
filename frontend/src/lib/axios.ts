@@ -65,11 +65,17 @@ createAuthRefreshInterceptor(api, refreshAuthLogic, {
 export function getApiErrorMessage(error: unknown, fallback: string): string {
     if (isAxiosError(error)) {
         const message = error.response?.data?.message;
-        console.log("message1 > ",  message)
-        console.log("message2 > ", typeof  message)
-        const errMessage  = JSON.parse(message) as Array<{field: string, message: string}>;
-        console.log("message3 > ", errMessage?.at(0)?.message)
-        if (typeof message === 'string') return errMessage?.at(0)?.message as string;
+        if (typeof message === 'string') {
+            try {
+                const parsed = JSON.parse(message);
+                if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.message) {
+                    return parsed[0].message;
+                }
+            } catch {
+                return message;
+            }
+            return message;
+        }
     }
     return fallback;
 }
