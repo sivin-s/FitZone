@@ -17,15 +17,32 @@ export default function Toast({ show, message, type, onClose }: ToastProps) {
     }
   }, [show, onClose]);
 
+  console.log("Toast rendering:", { show, message, type });
+
   if (!show) return null;
 
   return (
-    <div className={`fixed top-5 right-5 z-[100] flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white transition-all duration-300 ${
-      type === 'success' ? 'bg-green-600' : 'bg-red-600'
-    }`}>
+    <div
+      style={{
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        padding: '12px 16px',
+        borderRadius: '8px',
+        backgroundColor: type === 'success' ? '#16a34a' : '#dc2626',
+        color: '#ffffff',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        transition: 'all 0.3s ease-in-out',
+      }}
+      className="transition-all duration-300"
+    >
       {type === 'success' ? <CheckCircle size={20} /> : <XCircle size={20} />}
       <span className="text-sm font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 hover:opacity-80 transition-opacity">
+      <button onClick={onClose} style={{ marginLeft: '8px', cursor: 'pointer', background: 'none', border: 'none', color: 'inherit' }} className="hover:opacity-80 transition-opacity">
         <X size={16} />
       </button>
     </div>

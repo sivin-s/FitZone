@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../lib/axios';
 
 // SVG Icons used for statistics cards
 const Icon = {
@@ -227,14 +229,20 @@ function RegistrationsChart() {
   );
 }
 
-function Header() {
+interface HeaderProps {
+  totalUsers: number;
+  verifiedTrainers: number;
+  subscriptions: number;
+}
+
+function Header({ totalUsers, verifiedTrainers, subscriptions }: HeaderProps) {
   const exportData = () => {
     const csv = [
       ["Metric", "Value"],
-      ["Total Users", "0"],
-      ["Verified Trainers", "0"],
+      ["Total Users", String(totalUsers)],
+      ["Verified Trainers", String(verifiedTrainers)],
       ["Total Revenue", "0.0k"],
-      ["Subscriptions", "0"]
+      ["Subscriptions", String(subscriptions)]
     ].map(r => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -277,10 +285,29 @@ function Header() {
 export default function AdminDashboard() {
   const [range, setRange] = useState("Last 12 Months");
 
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-users-all"],
+    queryFn: async () => {
+      const response = await api.get('/admin/users?limit=1000');
+      return response.data.data;
+    }
+  });
+
+  const usersList: any[] = data?.users || [];
+  
+  // Calculate counts
+  const totalUsersCount = usersList.filter((u: any) => u.role === 'user').length;
+  const verifiedTrainersCount = usersList.filter((u: any) => u.role === 'trainer').length;
+  const subscriptionsCount = usersList.filter((u: any) => u.role === 'user' && u.isPremium).length;
+
   return (
     <div className="min-h-screen bg-white">
       <div className="px-5 sm:px-8 lg:px-10 py-6 sm:py-8">
-        <Header />
+        <Header 
+          totalUsers={totalUsersCount} 
+          verifiedTrainers={verifiedTrainersCount} 
+          subscriptions={subscriptionsCount} 
+        />
 
         <section className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           <StatCard
@@ -288,14 +315,14 @@ export default function AdminDashboard() {
             iconColor="text-black"
             icon={<Icon.cardUsers />}
             title="Total Users"
-            value="0"
+            value={isLoading ? "..." : String(totalUsersCount)}
           />
           <StatCard
             iconBg="bg-blue-100"
             iconColor="text-slate-700"
             icon={<Icon.dumbbell />}
             title="Verified Trainers"
-            value="0"
+            value={isLoading ? "..." : String(verifiedTrainersCount)}
           />
           <StatCard
             iconBg="bg-neutral-900"
@@ -309,7 +336,7 @@ export default function AdminDashboard() {
             iconColor="text-neutral-700"
             icon={<Icon.tag />}
             title="Subscriptions"
-            value="0"
+            value={isLoading ? "..." : String(subscriptionsCount)}
           />
         </section>
 

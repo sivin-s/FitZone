@@ -1,19 +1,19 @@
 import { Router } from "express";
 
-import { validate } from "../../../shared/middleware/validate.middleware.ts";
-import { authenticate } from "../../../shared/middleware/auth.middleware.ts";
+import { validate } from "../../../shared/middlewares/validate.middlewares.ts";
+import { authenticate } from "../../../shared/middlewares/auth.middlewares.ts";
 
-import { registerSchema } from "../schemas/register.schema.ts";
-import { loginSchema } from "../schemas/login.schema.ts";
-import { verifyOtpSchema } from "../schemas/verifyOtp.schema.ts";
-import { resendOtpSchema } from "../schemas/resendOtp.schema.ts";
-import { forgotPasswordSchema } from "../schemas/forgotPassword.schema.ts";
-import { resetPasswordSchema } from "../schemas/resetPassword.schema.ts";
+import { registerSchema } from "../schemas/register.schemas.ts";
+import { loginSchema } from "../schemas/login.schemas.ts";
+import { verifyOtpSchema } from "../schemas/verifyOtp.schemas.ts";
+import { resendOtpSchema } from "../schemas/resendOtp.schemas.ts";
+import { forgotPasswordSchema } from "../schemas/forgotPassword.schemas.ts";
+import { resetPasswordSchema } from "../schemas/resetPassword.schemas.ts";
 
 // injection
 import { appContainer } from "../../../DiContainer.ts";
-import {AUTH_TYPES} from "../../../DITypes/index.ts"
-import type { IAuthController } from "../interfaces/IAuthController.ts"
+import {AUTH_TYPES} from "../../../DITypes/index.DITypes.ts"
+import type { IAuthController } from "../interfaces/IAuthController.interfaces.ts"
 
 const authController  = appContainer.get<IAuthController>(AUTH_TYPES.IAuthController)
 
@@ -24,6 +24,9 @@ router.post("/verify-otp", validate(verifyOtpSchema), authController.verifyOtp);
 router.post("/resend-otp", validate(resendOtpSchema), authController.resendOtp);
 
 router.post("/login", validate(loginSchema), authController.login);
+
+router.get("/user-me", authController.userMe);    // checks userAccessToken only
+router.get("/admin-me", authController.adminMe);  // checks adminAccessToken only
 
 router.post("/google", authController.googleAuth);
 

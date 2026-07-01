@@ -1,15 +1,15 @@
 import { Router } from "express";
-import { authenticate } from "../../../shared/middleware/auth.middleware.ts";
-import { authorizeRoles } from "../../../shared/middleware/role.middleware.ts";
+import { authenticate } from "../../../shared/middlewares/auth.middlewares.ts";
+import { authorizeRoles } from "../../../shared/middlewares/role.middlewares.ts";
 import multer from "multer";
 
 // injection
 
 import { appContainer } from "../../../DiContainer.ts";
-import { TYPES } from "../../../DITypes/admin.types.ts"
-import type { IAdminController } from "../interfaces/IAdminController.ts";
-import { validate } from "../../../shared/middleware/validate.middleware.ts";
-import { updateUserSchema } from "../schemas/updateUser.schema.ts";
+import { TYPES } from "../../../DITypes/admin.DITypes.ts"
+import type { IAdminController } from "../interfaces/IAdminController.interfaces.ts";
+import { validate } from "../../../shared/middlewares/validate.middlewares.ts";
+import { updateUserSchema } from "../schemas/updateUser.schemas.ts";
 
 // const adminController = adminContainer.get<IAdminController>(TYPES.IAdminController)
 const adminController = appContainer.get<IAdminController>(TYPES.IAdminController);

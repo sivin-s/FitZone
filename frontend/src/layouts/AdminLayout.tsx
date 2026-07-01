@@ -22,7 +22,7 @@ export default function AdminLayout() {
   const logoutMutation = useMutation({
     mutationFn: () => api.post('/auth/logout'),
     onSuccess: () => {
-      queryClient.clear();
+      queryClient.setQueryData(['auth-admin'], null);
       navigate('/admin/login', { replace: true });
     },
   });
@@ -35,14 +35,14 @@ export default function AdminLayout() {
     const path = ROUTE_MAP[id];
     if (path) navigate(path);
   };
-   return(
+  return (
     <div className='flex h-screen bg-gray-50 overflow-hidden'>
-        <div className='shadow-sm'>
-          <AdminSidebar activeId={activeId} onNavigate={handleNavigate}/>
-        </div>
-        <main className='flex-1 overflow-y-auto'>
-          <Outlet/>
-        </main>
+      <div className='shadow-sm'>
+        <AdminSidebar activeId={activeId} onNavigate={handleNavigate} />
+      </div>
+      <main className='flex-1 overflow-y-auto'>
+        <Outlet />
+      </main>
     </div>
-   )
+  )
 }

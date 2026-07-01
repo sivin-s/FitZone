@@ -3,24 +3,24 @@
 import { Container } from "inversify";
 
 // import bindings/container or services
-import { LoggerService } from "./shared/services/logger.service";
-import type { ILogger } from "./shared/interfaces/ILogger";
+import { LoggerService } from "./shared/services/logger.services";
+import type { ILogger } from "./shared/interfaces/ILogger.interfaces";
 
 // import Module controllers/services/repositories
-import { UserController } from "./modules/users/controllers/user.controller";
-import { UserService } from "./modules/users/services/user.service";
-import type { IUserController } from "./modules/users/interfaces/IUserController";
-import type { IUserService } from "./modules/users/interfaces/IUserService";
-import type { IAuthController } from './modules/auth/interfaces/IAuthController';
-import { AuthController } from "./modules/auth/controllers/auth.controller";
-import type { IAuthService } from "./modules/auth/interfaces/IAuthService";
-import { AuthService } from "./modules/auth/services/auth.service";
-import type { IAuthRepository } from "./modules/auth/interfaces/IAuthRepository";
-import { AuthRepository } from "./modules/auth/repositories/auth.repository";
-import type { IAdminController } from "./modules/admin/interfaces/IAdminController";
-import { AdminController } from "./modules/admin/controllers/admin.controller";
-import { AdminService } from "./modules/admin/services/admin.service";
-import { AdminRepository } from "./modules/admin/repositories/admin.repository";
+import { UserController } from "./modules/users/controllers/user.controllers";
+import { UserService } from "./modules/users/services/user.services";
+import type { IUserController } from "./modules/users/interfaces/IUserController.interfaces";
+import type { IUserService } from "./modules/users/interfaces/IUserService.interfaces";
+import type { IAuthController } from './modules/auth/interfaces/IAuthController.interfaces';
+import { AuthController } from "./modules/auth/controllers/auth.controllers";
+import type { IAuthService } from "./modules/auth/interfaces/IAuthService.interfaces";
+import { AuthService } from "./modules/auth/services/auth.services";
+import type { IAuthRepository } from "./modules/auth/interfaces/IAuthRepository.interfaces";
+import { AuthRepository } from "./modules/auth/repositories/auth.repositories";
+import type { IAdminController } from "./modules/admin/interfaces/IAdminController.interfaces";
+import { AdminController } from "./modules/admin/controllers/admin.controllers";
+import { AdminService } from "./modules/admin/services/admin.services";
+import { AdminRepository } from "./modules/admin/repositories/admin.repositories";
 
 // types 
 import {
@@ -28,9 +28,9 @@ LOGGER_TYPES,
 USER_TYPES,
 AUTH_TYPES,
 ADMIN_TYPES
-}from './DITypes/index'
-import type { IAdminService } from "./modules/admin/interfaces/IAdminService";
-import type { IAdminRepository } from "./modules/admin/interfaces/IAdminRepository";
+}from './DITypes/index.DITypes'
+import type { IAdminService } from "./modules/admin/interfaces/IAdminService.interfaces";
+import type { IAdminRepository } from "./modules/admin/interfaces/IAdminRepository.interfaces";
 
 
 // create one shared container

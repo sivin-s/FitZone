@@ -22,6 +22,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedLayout from './layouts/ProtectedLayout';
 import AdminRoute from './components/AdminRoute';
 import AdminLayout from './layouts/AdminLayout';
+import PublicRoute from './components/PublicRoute';
 import NotFoundPage from './pages/NotFoundPage';
 import OtpVerification from './pages/OtpVerificationPage';
 
@@ -37,11 +38,18 @@ const queryClient = new QueryClient({
 const router = createBrowserRouter([
   // PUBLIC ROUTES
   { path: '/', element: <LandingPage /> },
-  { path: '/login', element: <LoginPage /> },
-  { path: '/register', element: <SignUpPage /> },
-  {path: '/admin/login', element: <AdminLogin/>},
-  {path: '/forgot-password', element: <ResetOTPPasswordPage/>},
-  {path: '/verify-otp', element: <OtpVerification/>},
+
+  // GUEST ONLY ROUTES (Redirects if already logged in)
+  {
+    element: <PublicRoute />,
+    children: [
+      { path: '/login', element: <LoginPage /> },
+      { path: '/register', element: <SignUpPage /> },
+      { path: '/admin/login', element: <AdminLogin /> },
+      { path: '/forgot-password', element: <ResetOTPPasswordPage /> },
+      { path: '/verify-otp', element: <OtpVerification /> },
+    ]
+  },
 
   {
     element: <ProtectedRoute />,

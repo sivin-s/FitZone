@@ -4,27 +4,51 @@ import createAuthRefreshInterceptor from 'axios-auth-refresh';
 export const api = axios.create({
     baseURL: '/api/v1',
     withCredentials: true, // cookies
-    headers: {  
+    headers: {
         'Content-Type': 'application/json'
     }
 })
 
 //  performs the token refresh
 const refreshAuthLogic = async (failedRequest: any) => {
+    const publicPaths = ['/', '/login', '/register', '/admin/login', '/forgot-password', '/verify-otp'];
+    if (publicPaths.includes(window.location.pathname)) {
+        return Promise.reject(new Error("Skipping token refresh on public routes."));
+    }
+
     try {
         await api.post('/auth/refresh-token');
         return Promise.resolve(); // if it has no value it mark as 'fulfilled'.
     } catch (error) {
-        // if reject -> redirect to login page
-        console.warn("session expired. Redirecting to login")
-        window.location.href = '/login';
+        // Check if the failure is because the account was blocked
+        const message: string = isAxiosError(error)
+            ? (error.response?.data?.message ?? '')
+            : '';
+
+        const isBlocked = message.toLowerCase().includes('blocked');
+        console.warn("session expired. Redirecting to login");
+        window.location.href = isBlocked ? '/login?reason=blocked' : '/login';
         return Promise.reject(error);
     }
 }
 
 createAuthRefreshInterceptor(api, refreshAuthLogic, {
-    statusCodes: [401], // trigger refresh only on 401 unauthorized.
-    // Queues all subsequent requests while refreshing(pause the request)
+    shouldRefresh: (error) => {
+        // Trigger refresh only on 401 unauthorized.
+        if (error.response?.status !== 401) {
+            return false;
+        }
+
+        const url = error.config?.url;
+        return !(
+            url?.includes('/auth/login') ||
+            url?.includes('/auth/register') ||
+            url?.includes('/auth/google') ||
+            url?.includes('/auth/forgot-password') ||
+            url?.includes('/auth/reset-password') ||
+            url?.includes('/auth/verify-otp')
+        );
+    }
 })
 
 // api.interceptors.response.use( // middleware

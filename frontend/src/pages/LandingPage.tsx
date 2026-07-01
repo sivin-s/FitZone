@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { useAuth } from '../hooks/useAuth';
+import { useAdminAuth } from '../hooks/useAdminAuth';
 
 const LandingPage = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { isAuthenticated, user } = useAuth();
+    const { isAdminAuthenticated } = useAdminAuth();
 
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -23,8 +27,17 @@ const LandingPage = () => {
                     </div>
 
                     <div className="hidden md:flex items-center gap-6">
-                        <Link to="/login" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Login</Link>
-                        <Link to="/register" className="bg-black text-white text-sm font-medium px-5 py-2.5 rounded-md hover:bg-gray-800 transition-colors">Sign Up</Link>
+                        {/* {isAdminAuthenticated && (
+                            <Link to="/admin/dashboard" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Admin</Link>
+                        )} */}
+                        {isAuthenticated ? (
+                            <Link to="/dashboard" className="bg-black text-white text-sm font-medium px-5 py-2.5 rounded-md hover:bg-gray-800 transition-colors">Dashboard</Link>
+                        ) : (
+                            <>
+                                <Link to="/login" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Login</Link>
+                                <Link to="/register" className="bg-black text-white text-sm font-medium px-5 py-2.5 rounded-md hover:bg-gray-800 transition-colors">Sign Up</Link>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile Menu Toggle */}
@@ -45,8 +58,14 @@ const LandingPage = () => {
                         <Link to="/trainers" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Browse Trainers</Link>
                         <Link to="/articles" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Articles</Link>
                         <hr className="border-gray-100" />
-                        <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Login</Link>
-                        <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="bg-black text-white text-sm font-medium px-4 py-2 rounded-md text-center hover:bg-gray-800 transition-colors">Sign Up</Link>
+                        {isAuthenticated ? (
+                            <Link to={user?.role === 'admin' ? "/admin/dashboard" : "/dashboard"} onClick={() => setIsMobileMenuOpen(false)} className="bg-black text-white text-sm font-medium px-4 py-2 rounded-md text-center hover:bg-gray-800 transition-colors">Dashboard</Link>
+                        ) : (
+                            <>
+                                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Login</Link>
+                                <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="bg-black text-white text-sm font-medium px-4 py-2 rounded-md text-center hover:bg-gray-800 transition-colors">Sign Up</Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </header>
@@ -61,7 +80,7 @@ const LandingPage = () => {
                         Elevate your physical potential through elite trainers, science-backed methodologies, and high-fidelity progress tracking. No gimmicks, just results.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4">
-                        <Link to="/register" className="bg-black text-white px-8 py-3.5 rounded-lg font-medium hover:bg-gray-800 transition-colors text-center">Get Started</Link>
+                        <Link to={isAuthenticated ? (user?.role === 'admin' ? '/admin/dashboard' : '/dashboard') : "/register"} className="bg-black text-white px-8 py-3.5 rounded-lg font-medium hover:bg-gray-800 transition-colors text-center">Get Started</Link>
                         <Link to="/programs" className="bg-white text-black border border-gray-300 px-8 py-3.5 rounded-lg font-medium hover:bg-gray-50 transition-colors text-center">View Programs</Link>
                     </div>
                 </div>

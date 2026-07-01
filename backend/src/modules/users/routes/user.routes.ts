@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "../../../shared/middleware/auth.middleware.ts";
+import { authenticate } from "../../../shared/middlewares/auth.middlewares.ts";
 import multer from "multer";
 
 const router = Router();
@@ -8,8 +8,8 @@ const upload = multer({ storage: multer.memoryStorage() }); // server memory for
 // injection
 // import { userContainer } from "../DI/container.ts";
 import { appContainer } from "../../../DiContainer.ts";
-import {TYPES} from "../../../DITypes/users.types.ts"
-import type { IUserController } from "../interfaces/IUserController.ts";
+import {TYPES} from "../../../DITypes/users.DITypes.ts"
+import type { IUserController } from "../interfaces/IUserController.interfaces.ts";
 
 // const userController = userContainer.get<IUserController>(TYPES.IUserController)
 

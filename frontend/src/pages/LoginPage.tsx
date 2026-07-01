@@ -1,17 +1,17 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate, useLocation, Link } from 'react-router';
+import { useNavigate, useLocation, useSearchParams, Link } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, getApiErrorMessage } from '../lib/axios';
 import Toast from '../components/Toast';
-import {GoogleLogin} from '@react-oauth/google'
+import { GoogleLogin } from '@react-oauth/google'
 
 //  Zod Schema for react form - custom
 const loginSchema = z.object({
     email: z.email('Invalid email address').min(1, 'Email is required').refine((value) => !/\s/.test(value), {
-      message: 'Email cannot contain spaces',
+        message: 'Email cannot contain spaces',
     }),
     password: z.string().min(1, 'Password is required').refine((val) => !/\s/.test(val), {
         message: 'Password must not contain spaces',
@@ -29,22 +29,39 @@ export default function LoginPage() {
     const location = useLocation();
     const queryClient = useQueryClient();
     const [showPassword, setShowPassword] = useState(false);
+    const [searchParams] = useSearchParams();
 
-    // toast
-    const [toast, setToast] = useState<{show: boolean; message:string; type: 'success' | 'error'}>({
-        show: false, message: '', type: 'success'
-    })
+    // toast — pre-fill if redirected because account was blocked
+    const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
+        show: false,
+        message: '',
+        type: 'success'
+    });
+
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('reason') === 'blocked') {
+            setToast({
+                show: true,
+                message: 'Your account has been blocked by an administrator. Please contact support.',
+                type: 'error'
+            });
+        }
+    }, [location.search]);
 
 
 
     const from = (location.state as LoginLocationState | null)?.from?.pathname ?? '/dashboard';
 
-  const {register, handleSubmit, formState:{errors}, setError} = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema) // custom validation
-  })
+    const { register, handleSubmit, formState: { errors }, setError } = useForm<LoginFormData>({
+        resolver: zodResolver(loginSchema) // custom validation
+    })
 
-  
 
+
+
+    // stable reference so Toast's useEffect doesn't re-run on every render
+    const closeToast = useCallback(() => setToast(prev => ({ ...prev, show: false })), []);
 
     const loginMutation = useMutation({
         mutationFn: async (data: LoginFormData) => {
@@ -53,44 +70,50 @@ export default function LoginPage() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['auth-user'] });
-            navigate(from, { replace: true });
+            setToast({ show: true, message: 'Welcome back! Redirecting to your dashboard...', type: 'success' });
+            setTimeout(() => navigate(from, { replace: true }), 1500);
         },
         onError: (error: unknown) => {
             const message = getApiErrorMessage(error, 'Invalid email or password.');
-            setError('password', { type: 'manual', message });
+            // Show toast for blocked accounts, inline error for wrong credentials
+            if (message.toLowerCase().includes('blocked')) {
+                setToast({ show: true, message, type: 'error' });
+            } else {
+                setError('password', { type: 'manual', message });
+            }
         },
     });
 
 
     // google
-      const googleLoginMutation = useMutation({
-    mutationFn: async (idToken: string) => {
-      // Matches your backend POST /auth/google { idToken: "..." }
-      const response = await api.post('/auth/google', { idToken });
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['auth-user'] });
-      navigate(from, { replace: true });
-    },
-    onError: (error: unknown) => {
-      const message = getApiErrorMessage(error, 'Google login failed. Please try again.');
-      setToast({ show: true, message, type: 'error' });
-    },
-  });
+    const googleLoginMutation = useMutation({
+        mutationFn: async (idToken: string) => {
+            const response = await api.post('/auth/google', { idToken });
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['auth-user'] });
+            setToast({ show: true, message: 'Google login successful! Redirecting...', type: 'success' });
+            setTimeout(() => navigate(from, { replace: true }), 1500);
+        },
+        onError: (error: unknown) => {
+            const message = getApiErrorMessage(error, 'Google login failed. Please try again.');
+            setToast({ show: true, message, type: 'error' });
+        },
+    });
 
-  const onSubmit =  (data: LoginFormData)=>{
-    loginMutation.mutate(data)
-  }
+    const onSubmit = (data: LoginFormData) => {
+        loginMutation.mutate(data)
+    }
 
     return (
         <div className="bg-gray-50 min-h-screen flex flex-col font-sans">
             {/* toast */}
-            <Toast 
-              show={toast.show}
-              message={toast.message}
-              type={toast.type}
-              onClose={()=> setToast(prev => ({...prev, show: false}))}
+            <Toast
+                show={toast.show}
+                message={toast.message}
+                type={toast.type}
+                onClose={closeToast}
             />
             {/* Header */}
             <header className="bg-white border-b border-gray-200">
@@ -115,9 +138,9 @@ export default function LoginPage() {
                             <p className="text-gray-600">Enter your details to access your dashboard.</p>
                         </div>
 
-                       
+
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
-                           
+
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">Email</label>
                                 <input
@@ -167,7 +190,7 @@ export default function LoginPage() {
                                     <span className="block text-red-500 text-sm mt-1">{errors.password.message}</span>
                                 )}
                             </div>
-{/* submit btn  */}
+                            {/* submit btn  */}
                             <button
                                 type="submit"
                                 disabled={loginMutation.isPending}
@@ -183,7 +206,7 @@ export default function LoginPage() {
                                 )}
                             </button>
 
-                           
+
                             <div className="relative">
                                 <div className="absolute inset-0 flex items-center">
                                     <div className="w-full border-t border-gray-300"></div>
@@ -195,22 +218,22 @@ export default function LoginPage() {
 
                             {/* Google Login Button */}
                             <div className="flex justify-center [&>div]:w-full">
-              <GoogleLogin
-                onSuccess={(credentialResponse) => {
-                  const idToken = credentialResponse.credential;
-                  if (idToken) {
-                    googleLoginMutation.mutate(idToken);
-                  }
-                }}
-                onError={() => {
-                  setToast({ show: true, message: 'Google login cancelled or failed.', type: 'error' });
-                }}
-                theme="outline"
-                size="large"
-                text="signin_with"
-                shape="rectangular"
-              />
-            </div>
+                                <GoogleLogin
+                                    onSuccess={(credentialResponse) => {
+                                        const idToken = credentialResponse.credential;
+                                        if (idToken) {
+                                            googleLoginMutation.mutate(idToken);
+                                        }
+                                    }}
+                                    onError={() => {
+                                        setToast({ show: true, message: 'Google login cancelled or failed.', type: 'error' });
+                                    }}
+                                    theme="outline"
+                                    size="large"
+                                    text="signin_with"
+                                    shape="rectangular"
+                                />
+                            </div>
 
                             {/* Sign Up Link */}
                             <p className="text-center text-sm text-gray-600">

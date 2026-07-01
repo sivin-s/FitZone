@@ -25,6 +25,7 @@ export default function ProtectedLayout() {
         mutationFn: () => api.post('/auth/logout'),
         onSuccess: () => {
             queryClient.clear();
+            queryClient.setQueryData(['auth-user'], null);
             navigate('/login', { replace: true })
         }
     });
