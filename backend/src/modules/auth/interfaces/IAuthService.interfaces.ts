@@ -18,6 +18,7 @@ export interface IAuthService {
   ): Promise<{
     message: string;
     userId: string;
+    expiresInSeconds: number;
   }>;
 
   verifyOtp(
@@ -29,6 +30,7 @@ export interface IAuthService {
 
   resendOtp(email: string): Promise<{
     message: string;
+    expiresInSeconds: number;
   }>;
 
   login(
@@ -49,6 +51,7 @@ export interface IAuthService {
 
   forgotPassword(email: string): Promise<{
     message: string;
+    expiresInSeconds: number;
   }>;
 
   resetPassword(

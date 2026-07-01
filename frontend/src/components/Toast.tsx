@@ -17,7 +17,7 @@ export default function Toast({ show, message, type, onClose }: ToastProps) {
     }
   }, [show, onClose]);
 
-  console.log("Toast rendering:", { show, message, type });
+  // console.log("Toast rendering:", { show, message, type });
 
   if (!show) return null;
 

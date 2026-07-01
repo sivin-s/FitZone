@@ -4,6 +4,8 @@ import type { Request } from "express";
 export interface AuthPayload {
   userId: string;
   role: "user" | "trainer" | "admin";
+  exp?: number;
+  iat?: number;
 }
 
 export interface AuthRequest extends Request {

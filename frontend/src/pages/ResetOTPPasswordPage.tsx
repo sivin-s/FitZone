@@ -5,7 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { api, getApiErrorMessage } from '../lib/axios';
-import { BadgeCheck, MailCheck } from 'lucide-react';
+import { BadgeCheck, Mail, MailCheck } from 'lucide-react';
+import { useOtpLocalStorage } from '../lib/otpLocalStorage';
 
 // Zod Schema Send OTP
 const forgotSchema = z.object({
@@ -39,27 +40,18 @@ const resetSchema = z.object({
 type ResetFormData = z.infer<typeof resetSchema>;
 
 export default function ResetPasswordPage() {
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(() => localStorage.getItem('forgot_password_email') || '');
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
-    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(() => !!localStorage.getItem('forgot_password_email'));
     const [isResetSuccess, setIsResetSuccess] = useState(false);
     const [formError, setFormError] = useState('');
     
-    // Resend OTP Timer
-    const [timer, setTimer] = useState(55);
+    // otp localstorage hook
+    const [timer, startTimer, stopTimer] = useOtpLocalStorage('forgot_password_cooldown');
+   
     const canResend = timer === 0;
-    const isTimerRunning = timer > 0 && isSubmitted;
-
+  
     const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
-
-    // Timer Effect
-    useEffect(() => {
-        if (!isTimerRunning) return;
-        const interval = setInterval(() => {
-            setTimer((prev) => Math.max(0, prev - 1));
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [isTimerRunning]);
 
     const {
         register: registerForgot,
@@ -102,11 +94,15 @@ export default function ResetPasswordPage() {
             const response = await api.post('/auth/forgot-password', { email: emailData });
             return response.data;
         },
-        onSuccess: (_, emailData) => {
+        onSuccess: (res, emailData) => {
             setFormError('');
             setEmail(emailData);
             setIsSubmitted(true);
-            setTimer(55); // Reset timer on successful send
+            localStorage.setItem('forgot_password_email', emailData);
+            
+            const dynamicSeconds = res?.data?.expiresInSeconds || 55;
+            startTimer(dynamicSeconds);
+
             setTimeout(() => {
                 inputRefs.current[0]?.focus();
             }, 50);
@@ -125,6 +121,8 @@ export default function ResetPasswordPage() {
         onSuccess: () => {
             setFormError('');
             setIsResetSuccess(true);
+            localStorage.removeItem('forgot_password_email');
+            stopTimer();
         },
         onError: (err: unknown) => {
             setFormError(getApiErrorMessage(err, 'Failed to reset password. Please check your OTP.'));
@@ -174,6 +172,8 @@ export default function ResetPasswordPage() {
         setIsSubmitted(false);
         setFormError('');
         setOtp(['', '', '', '', '', '']);
+        localStorage.removeItem('forgot_password_email');
+        stopTimer();
         resetForgotForm();
         resetResetForm();
     };
@@ -217,7 +217,9 @@ export default function ResetPasswordPage() {
                             {/* Lock Icon */}
                             <div className="flex justify-center mb-6">
                                 <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <i className="fa-solid fa-lock text-3xl text-gray-700"></i>
+                                    <i className="fa-solid fa-lock text-3xl text-gray-700">
+                                        <Mail />
+                                    </i>
                                 </div>
                             </div>
 

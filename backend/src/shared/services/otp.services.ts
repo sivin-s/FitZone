@@ -1,13 +1,18 @@
 import { redisClient } from "../../config/redis.config.ts";
 import cryto from "crypto";
 import type {IOtpService} from '../interfaces/IOtpService.interfaces.ts'
+import { env } from "../../config/env.config.ts";
 
 class OtpService {
-  private readonly _OTP_PREFIX = "otp:";
-  private readonly _OTP_EXPIRY_SECONDS = 600; // 10 Minutes
+  private readonly _OTP_PREFIX = env.OTP_PREFIX;
+  private readonly _OTP_EXPIRY_SECONDS = env.OTP_EXPIRY_SECONDS;
 
   generateOtp(): string {
     return cryto.randomInt(100000, 999999).toString();
+  }
+
+  getExpirySeconds():number{
+    return env.OTP_EXPIRY_SECONDS;
   }
 
   async storeOtp(email: string, otp: string): Promise<void> {

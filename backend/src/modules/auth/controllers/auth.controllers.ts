@@ -30,7 +30,7 @@ export class AuthController implements IAuthController {
     const result = await this._authService.register(username, email, password);
     res
       .status(201)
-      .json(new ApiResponse(201, result.message, { userId: result.userId }));
+      .json(new ApiResponse(201, result.message, { userId: result.userId, expiresInSeconds: result.expiresInSeconds }));
   });
 
   // Returns session info by reading only userAccessToken, and checks isBlocked status
@@ -93,7 +93,7 @@ export class AuthController implements IAuthController {
   resendOtp = asyncHandler(async (req: Request, res: Response) => {
     const { email } = req.body;
     const result = await this._authService.resendOtp(email);
-    res.status(200).json(new ApiResponse(200, result.message));
+    res.status(200).json(new ApiResponse(200, result.message, { expiresInSeconds: result.expiresInSeconds }));
   });
 
   login = asyncHandler(async (req: Request, res: Response) => {
@@ -182,7 +182,7 @@ export class AuthController implements IAuthController {
   forgotPassword = asyncHandler(async (req: Request, res: Response) => {
     const { email } = req.body;
     const result = await this._authService.forgotPassword(email);
-    res.status(200).json(new ApiResponse(200, result.message));
+    res.status(200).json(new ApiResponse(200, result.message, { expiresInSeconds: result.expiresInSeconds }));
   });
 
   resetPassword = asyncHandler(async (req: Request, res: Response) => {

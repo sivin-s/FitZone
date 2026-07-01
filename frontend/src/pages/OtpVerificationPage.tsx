@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import {useMutation} from '@tanstack/react-query'
 import {api, getApiErrorMessage} from '../lib/axios'
 import Toast from '../components/Toast';
+import { AxiosError, isAxiosError } from 'axios';
+import { useOtpLocalStorage } from '../lib/otpLocalStorage';
 
 type OtpLocationState = {
     email?: string;
@@ -12,13 +14,26 @@ export default function OtpVerification() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const email = (location.state as OtpLocationState | null)?.email ?? 'your email';
+    const locationState = location.state as any;
+    const email = locationState?.email;
+    const initialExpiresIn = locationState?.expiresInSeconds;
+
+    // localstorage - otp
+    const [timer, startTimer, stopTimer] = useOtpLocalStorage(email ? `otp_cooldown_${email}` : undefined);
 
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
-    const [timer, setTimer] = useState(55);
     const canResend = timer === 0;
-    const isTimerRunning = timer > 0;
     const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+    // Start timer on mount if it's not already running in localStorage
+    useEffect(() => {
+        if (email && initialExpiresIn) {
+            const savedExpiry = localStorage.getItem(`otp_cooldown_${email}`);
+            if (!savedExpiry) {
+                startTimer(initialExpiresIn);
+            }
+        }
+    }, [email, initialExpiresIn]);
 
     // toast
     const [toast, setToast] = useState<{
@@ -37,13 +52,6 @@ export default function OtpVerification() {
     }
 }, [email, navigate]);
 
-    useEffect(() => {
-        if (!isTimerRunning) return;
-        const interval = setInterval(() => {
-            setTimer((prev) => Math.max(0, prev - 1));
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [isTimerRunning]);
 
     const handleChange = (index: number, value: string) => {
         if (!/^\d*$/.test(value)) return;
@@ -68,9 +76,16 @@ export default function OtpVerification() {
             return response.data;
         },
         onSuccess: ()=>{
+             stopTimer();
              navigate('/login', {replace: true, state:{message: 'Email verified! Please log in.'}})
         },
         onError: (error: unknown)=>{
+            console.error("message >", error)
+            console.error("message >", isAxiosError(error))
+            // let err: AxiosError;
+            // console.error("message >", err?.response)
+            // console.error("message >", err?.response?.data)
+            // console.error("message >", err?.request)
             setToast({
                 show: true,
                 message: getApiErrorMessage(error, 'Invalid OTP. Please try again.'),
@@ -86,8 +101,9 @@ export default function OtpVerification() {
         const response = await api.post('/auth/resend-otp',{email});
         return response.data;
     },
-    onSuccess: ()=>{
-        setTimer(55);
+    onSuccess: (res)=>{
+        const dynamicSeconds = res?.data?.expiresInSeconds || 55;
+        startTimer(dynamicSeconds);
         setOtp(['','','','','',''])
         inputRefs.current[0]?.focus();
         setToast({show: true, message: 'New Verification code sent!', type: 'success'})

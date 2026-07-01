@@ -81,7 +81,7 @@ export default function SignUpPage() {
       showToast('Account created! Please check your email for the OTP.', 'success');
       reset();
       setTimeout(() =>{
-         navigate('/verify-otp',{state:{email: variables.email}})
+         navigate('/verify-otp',{state:{email: variables.email, expiresInSeconds: _data?.data?.expiresInSeconds}})
         }, 1500);
     },
         onError: (error: unknown) => {

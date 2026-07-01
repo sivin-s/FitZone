@@ -46,7 +46,7 @@ export const authenticate = asyncHandler(
       throw new UnauthorizedError("Your account has been blocked. Please contact support.");
     }
 
-    logger.debug("payload >>", payload)
+    logger.debug("payload >> " + JSON.stringify(payload))
     req.user = payload;
     next();
   },

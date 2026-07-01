@@ -21,15 +21,17 @@ export const validate = (schema: ZodType) => {
           : null;
 
       const formattedErrors = issues
-        ? issues.map((err: any) => ({
+        ? issues.map((err: any) =>{
+          console.log(err)
+          return{
             field: err.path.join("."),
             message: err.message,
-          }))
+          }})
         : [{ field: "unknown", message: error.message ?? "Validation error" }];
 
       next(
         new BadRequestError(
-          `Validation failed: ${JSON.stringify(formattedErrors)}`,
+          `${JSON.stringify(formattedErrors)}`,
         ),
       );
     }

@@ -1,4 +1,4 @@
-import axios, { isAxiosError } from 'axios';
+import axios, { AxiosError, isAxiosError } from 'axios';
 import createAuthRefreshInterceptor from 'axios-auth-refresh';
 
 export const api = axios.create({
@@ -65,7 +65,11 @@ createAuthRefreshInterceptor(api, refreshAuthLogic, {
 export function getApiErrorMessage(error: unknown, fallback: string): string {
     if (isAxiosError(error)) {
         const message = error.response?.data?.message;
-        if (typeof message === 'string') return message;
+        console.log("message1 > ",  message)
+        console.log("message2 > ", typeof  message)
+        const errMessage  = JSON.parse(message) as Array<{field: string, message: string}>;
+        console.log("message3 > ", errMessage?.at(0)?.message)
+        if (typeof message === 'string') return errMessage?.at(0)?.message as string;
     }
     return fallback;
 }
