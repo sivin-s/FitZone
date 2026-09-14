@@ -7,20 +7,21 @@ import { UnauthorizedError } from "../../../shared/errors/UnauthorizedError.errr
 import { storageProvider } from "../../../shared/services/s3Storage.provider.services.ts";
 
 // injection
-import {injectable, inject} from "inversify"
-import {AUTH_TYPES,LOGGER_TYPES} from "../../../DITypes/index.DITypes.ts"
+import { injectable, inject } from "inversify";
+import { AUTH_TYPES, LOGGER_TYPES } from "../../../DITypes/index.DITypes.ts";
 import type { ILogger } from "../../../shared/interfaces/ILogger.interfaces.ts";
 
 @injectable()
 export class UserService implements IUserService {
   constructor(
-   @inject(AUTH_TYPES.IAuthRepository) private _authRepository: IAuthRepository,
-   @inject(LOGGER_TYPES.ILogger) private _logger: ILogger
+    @inject(AUTH_TYPES.IAuthRepository)
+    private _authRepository: IAuthRepository,
+    @inject(LOGGER_TYPES.ILogger) private _logger: ILogger,
   ) {}
 
   async getProfile(userId: string) {
     // log
-    this._logger.info(`Fetching profile for user:" ${userId}`)
+    this._logger.info(`Fetching profile for user:" ${userId}`);
 
     const user = await this._authRepository.findById(userId);
     if (!user) throw new NotFoundError("User not found");
@@ -31,14 +32,14 @@ export class UserService implements IUserService {
     if (!user) throw new NotFoundError("User not found");
 
     // prevent users from updating sensitive fields via this endpoint
-    const safeData = { ...updateData };
-    delete safeData.password;
-    delete safeData.role;
-    delete safeData.isBlocked;
-    delete safeData.isVerified;
-    delete safeData.googleId;
-    delete safeData.gender;
-  
+    const { username, phone, gender, city, pincode } = updateData;
+    const safeData = {
+      username,
+      phone,
+      gender: gender || undefined,
+      city,
+      pincode,
+    };
 
     return await this._authRepository.updateProfile(userId, safeData);
   }

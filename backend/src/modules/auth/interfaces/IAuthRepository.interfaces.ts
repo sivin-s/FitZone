@@ -4,7 +4,7 @@ import type { IUser } from "../models/user.models.ts";
 export interface IAuthRepository extends IBaseRepository<IUser> {
   // auth methods - non crud methods
 
-  findByEmail(email: string):Promise<IUser | null>;
+  findByEmail(email: string): Promise<IUser | null>;
 
   findByIdWithPassword(id: string): Promise<IUser | null>;
 
@@ -13,8 +13,6 @@ export interface IAuthRepository extends IBaseRepository<IUser> {
     isVerified: boolean,
   ): Promise<IUser | null>;
   updatePassword(userId: string, newPassword: string): Promise<IUser | null>;
-
-
 
   // google auth methods
   findByGoogleId(googleId: string): Promise<IUser | null>;

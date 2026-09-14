@@ -23,7 +23,9 @@ export default function Toast({ show, message, type, onClose }: ToastProps) {
 
   return (
     <div
+      role={type === 'error' ? 'alert' : 'status'}
       style={{
+        maxWidth: 'calc(100vw - 40px)',
         position: 'fixed',
         top: '20px',
         right: '20px',
@@ -42,7 +44,7 @@ export default function Toast({ show, message, type, onClose }: ToastProps) {
     >
       {type === 'success' ? <CheckCircle size={20} /> : <XCircle size={20} />}
       <span className="text-sm font-medium">{message}</span>
-      <button onClick={onClose} style={{ marginLeft: '8px', cursor: 'pointer', background: 'none', border: 'none', color: 'inherit' }} className="hover:opacity-80 transition-opacity">
+      <button aria-label="Dismiss notification" onClick={onClose} style={{ marginLeft: '8px', cursor: 'pointer', background: 'none', border: 'none', color: 'inherit' }} className="hover:opacity-80 transition-opacity">
         <X size={16} />
       </button>
     </div>

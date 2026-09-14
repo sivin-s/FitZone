@@ -10,15 +10,15 @@ import { UserMapper } from "../../users/mapper/user.mappers.ts";
 import { storageProvider } from "../../../shared/services/s3Storage.provider.services.ts";
 
 // zod dto
-import type { UpdateUserRequestDto } from "../schemas/updateUser.schemas.ts"
-import { injectable,inject } from "inversify";
+import type { UpdateUserRequestDto } from "../schemas/updateUser.schemas.ts";
+import { injectable, inject } from "inversify";
 
-import {TYPES} from '../../../DITypes/admin.DITypes.ts'
+import { TYPES } from "../../../DITypes/admin.DITypes.ts";
 
 @injectable()
 export class AdminController implements IAdminController {
   constructor(
-   @inject(TYPES.IAdminService) private _adminService: IAdminService
+    @inject(TYPES.IAdminService) private _adminService: IAdminService,
   ) {}
 
   getUsers = asyncHandler(
@@ -34,10 +34,12 @@ export class AdminController implements IAdminController {
       const usersWithUrls = await Promise.all(
         usersList.map(async (u) => {
           if (u.profilePicture) {
-            u.profilePicture = await storageProvider.getPresignedUrl(u.profilePicture);
+            u.profilePicture = await storageProvider.getPresignedUrl(
+              u.profilePicture,
+            );
           }
           return u;
-        })
+        }),
       );
 
       res.status(200).json(
@@ -86,16 +88,20 @@ export class AdminController implements IAdminController {
       req: AuthRequest,
       res: Response,
       _next: NextFunction,
-    ): Promise<void> => { 
+    ): Promise<void> => {
       // dto using zod
-      const data = req.body as UpdateUserRequestDto;  // incoming dto
+      const data = req.body as UpdateUserRequestDto; // incoming dto
 
       const serviceData = {
         ...data,
+        ...(req.file && {
+          profilePicture: await storageProvider.uploadFile(req.file, "avatars"),
+        }),
         role: data.role as "admin" | "user" | "trainer" | undefined,
         gender: data.gender as "Male" | "Female" | "Other" | undefined,
-        isBlocked: data.isBlocked !== undefined ? Boolean(data.isBlocked): undefined
-      }
+        isBlocked:
+          data.isBlocked !== undefined ? Boolean(data.isBlocked) : undefined,
+      };
 
       // admin
       const adminId = req.user?.userId as string;
@@ -123,7 +129,7 @@ export class AdminController implements IAdminController {
         //   pincode,
         //   ...(profilePictureUrl && { profilePicture: profilePictureUrl }),
         // },
-        serviceData
+        serviceData,
       );
       if (!updateUser) {
         throw new NotFoundError("User not found");

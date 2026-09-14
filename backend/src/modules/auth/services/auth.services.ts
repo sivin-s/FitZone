@@ -14,13 +14,13 @@ import type { IAuthService } from "../interfaces/IAuthService.interfaces.ts";
 const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 // injection
-import {injectable, inject} from "inversify"
+import { injectable, inject } from "inversify";
 import { AUTH_TYPES as TYPES } from "../../../DITypes/index.DITypes.ts";
 
 @injectable()
 export class AuthService implements IAuthService {
   constructor(
-   @inject(TYPES.IAuthRepository)  private _authRepository: IAuthRepository
+    @inject(TYPES.IAuthRepository) private _authRepository: IAuthRepository,
   ) {}
 
   // google auth
@@ -34,7 +34,7 @@ export class AuthService implements IAuthService {
         audience: env.GOOGLE_CLIENT_ID,
       });
       const payload = ticket.getPayload();
-      if (payload) {
+      if (payload?.email && payload.email_verified) {
         googleUser = {
           email: payload.email ?? "",
           sub: payload.sub,
@@ -62,6 +62,9 @@ export class AuthService implements IAuthService {
     } else {
       const existingEmailUser = await this._authRepository.findByEmail(email);
       if (existingEmailUser) {
+        if (existingEmailUser.isBlocked) {
+          throw new UnauthorizedError("Your account has been blocked");
+        }
         if (existingEmailUser.googleId) {
           throw new ConflictError(
             "This email is already linked to a different Google account",
@@ -121,7 +124,7 @@ export class AuthService implements IAuthService {
     return {
       message: "Registration successful. Please check your email for the OTP.",
       userId: newUser._id.toString(),
-      expiresInSeconds: otpService.getExpirySeconds() // dynamic otp expiry for frontend
+      expiresInSeconds: otpService.getExpirySeconds(), // dynamic otp expiry for frontend
     };
   }
 
@@ -153,10 +156,10 @@ export class AuthService implements IAuthService {
     await otpService.storeOtp(email, otp);
     await emailService.sendOtp(email, otp);
 
-    return { 
+    return {
       message: "A new OTP has been sent to your email",
-      expiresInSeconds: otpService.getExpirySeconds() // dynamic otp expiry for frontend
-     };
+      expiresInSeconds: otpService.getExpirySeconds(), // dynamic otp expiry for frontend
+    };
   }
 
   async login(email: string, password: string) {
@@ -209,11 +212,12 @@ export class AuthService implements IAuthService {
     await emailService.sendPasswordResetOtp(email, otp);
     return {
       message: "If an account with this email exists, and OTP has been sent.",
-      expiresInSeconds: otpService.getExpirySeconds() // dynamic otp expiry for frontend
+      expiresInSeconds: otpService.getExpirySeconds(), // dynamic otp expiry for frontend
     };
   }
 
-  async resetPassword(email: string, otp: string, newPassword: string) { // profile no otp need.
+  async resetPassword(email: string, otp: string, newPassword: string) {
+    // profile no otp need.
     const user = await this._authRepository.findByEmail(email);
     if (!user) throw new BadRequestError("Invalid request");
 

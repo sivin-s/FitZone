@@ -12,10 +12,12 @@ import { resetPasswordSchema } from "../schemas/resetPassword.schemas.ts";
 
 // injection
 import { appContainer } from "../../../DiContainer.ts";
-import {AUTH_TYPES} from "../../../DITypes/index.DITypes.ts"
-import type { IAuthController } from "../interfaces/IAuthController.interfaces.ts"
+import { AUTH_TYPES } from "../../../DITypes/index.DITypes.ts";
+import type { IAuthController } from "../interfaces/IAuthController.interfaces.ts";
 
-const authController  = appContainer.get<IAuthController>(AUTH_TYPES.IAuthController)
+const authController = appContainer.get<IAuthController>(
+  AUTH_TYPES.IAuthController,
+);
 
 const router = Router();
 
@@ -25,8 +27,8 @@ router.post("/resend-otp", validate(resendOtpSchema), authController.resendOtp);
 
 router.post("/login", validate(loginSchema), authController.login);
 
-router.get("/user-me", authController.userMe);    // checks userAccessToken only
-router.get("/admin-me", authController.adminMe);  // checks adminAccessToken only
+router.get("/user-me", authController.userMe); // checks userAccessToken only
+router.get("/admin-me", authController.adminMe); // checks adminAccessToken only
 
 router.post("/google", authController.googleAuth);
 

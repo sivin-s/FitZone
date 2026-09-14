@@ -1,8 +1,7 @@
 import type { Response, NextFunction } from "express";
 import { asyncHandler } from "../../../shared/handler/asyncHandler.handler.ts";
 import { ApiResponse } from "../../../shared/responses/ApiResponse.responses.ts";
-import { UserService } from "../services/user.services.ts";
-import { AuthRepository } from "../../auth/repositories/auth.repositories.ts";
+
 import type { AuthRequest } from "../../../types/AuthRequest.types.ts";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.errors.ts";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.errors.ts";
@@ -15,14 +14,12 @@ import type { IUserController } from "../interfaces/IUserController.interfaces.t
 import { UserMapper } from "../mapper/user.mappers.ts";
 
 // injection
-import {injectable, inject} from "inversify";
+import { injectable, inject } from "inversify";
 import { USER_TYPES as TYPES } from "../../../DITypes/index.DITypes.ts";
 
 @injectable()
 export class UserController implements IUserController {
-  constructor(
-    @inject(TYPES.IUserService) private _userService: IUserService
-  ) {}
+  constructor(@inject(TYPES.IUserService) private _userService: IUserService) {}
 
   getProfile = asyncHandler(
     async (req: AuthRequest, res: Response, _next: NextFunction) => {

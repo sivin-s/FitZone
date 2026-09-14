@@ -2,32 +2,32 @@ import User, { type IUser } from "../models/user.models.ts";
 import type { IAuthRepository } from "../interfaces/IAuthRepository.interfaces.ts";
 
 // injection
-import {injectable} from "inversify";
-import { AdminRepository } from '../../admin/repositories/admin.repositories.ts';
+
 import { BaseRepository } from "../../../common/repositories/Base.repositories.ts";
 
 // @injectable()
-export class AuthRepository extends BaseRepository<IUser>  implements IAuthRepository {
-
-  constructor(){
-    super(User) // pass modal
+export class AuthRepository
+  extends BaseRepository<IUser>
+  implements IAuthRepository
+{
+  constructor() {
+    super(User); // pass modal
   }
 
-
   async findByEmail(email: string): Promise<IUser | null> {
-    return super.findOne({email},"+password"); // override the parent method behavior.
+    return super.findOne({ email }, "+password"); // override the parent method behavior.
   }
 
   async findByIdWithPassword(id: string): Promise<IUser | null> {
-    return this.findOne({ _id: id },"+password");
+    return this.findOne({ _id: id }, "+password");
   }
- 
+
   async updateVerificationStatus(
     userId: string,
     isVerified: boolean,
   ): Promise<IUser | null> {
     return this.update(
-       userId,
+      userId,
       { isVerified }, // updating data
     );
   }

@@ -46,7 +46,9 @@ export default function AdminSidebar({ activeId, onNavigate }: AdminSidebarProps
       defaultActiveId="coupons"
       activeId={activeId}
       onNavigate={onNavigate}
-      sections={sections}
+      sections={sections.map(section => ({ ...section, items: section.items.map(item => ({
+        ...item, disabled: !['dashboard', 'users', 'logout'].includes(item.id),
+      })) }))}
     />
   );
 }

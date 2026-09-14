@@ -8,6 +8,7 @@ export const redisClient = new Redis(env.REDIS_URI, {
       logger.error("❌ Redis connection failed after 3 retries. Giving up.");
       return null; // stop retrying to prevent infinite loops.
     }
+    return Math.min(times * 200, 1000);
   },
 });
 
@@ -15,6 +16,6 @@ redisClient.on("connect", () => {
   logger.info("✅ Redis connected successfully");
 });
 
-redisClient.on("error", (err: any) => {
-  logger.error("❌ Redis connection error:", err.message);
+redisClient.on("error", (error) => {
+  logger.error({ error }, "Redis connection error");
 });

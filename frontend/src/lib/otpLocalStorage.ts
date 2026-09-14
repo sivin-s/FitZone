@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 
-export const useOtpLocalStorage = (key = "otp_coolDown_time") => {
+export const useOtpLocalStorage = (key = "otp_coolDown_time", initialSeconds = 0) => {
     // lazy initialization of remaining time based on current time vs stored target expiry
     const [timeLeft, setTimeLeft] = useState<number>(() => {
         const savedExpiry = localStorage.getItem(key);
@@ -8,17 +8,17 @@ export const useOtpLocalStorage = (key = "otp_coolDown_time") => {
             const remaining = Math.ceil((Number(savedExpiry) - Date.now()) / 1000);
             return remaining > 0 ? remaining : 0;
         }
-        return 0;
+        return Math.max(0, initialSeconds);
     });
 
-    const intervalRef = useRef<any>(null);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // function to set/start target timer
-    const startTimer = (seconds: number) => {
+    const startTimer = useCallback((seconds: number) => {
         const targetExpiry = Date.now() + seconds * 1000;
         localStorage.setItem(key, targetExpiry.toString());
         setTimeLeft(seconds);
-    };
+    }, [key]);
 
     // function to clear/stop timer
     const stopTimer = () => {
@@ -31,6 +31,9 @@ export const useOtpLocalStorage = (key = "otp_coolDown_time") => {
 
     useEffect(() => {
         if (timeLeft > 0) {
+            if (!localStorage.getItem(key)) {
+                localStorage.setItem(key, String(Date.now() + timeLeft * 1000));
+            }
             intervalRef.current = setInterval(() => {
                 const savedExpiry = localStorage.getItem(key);
                 if (savedExpiry) {

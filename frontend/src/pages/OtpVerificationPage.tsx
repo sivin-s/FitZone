@@ -1,35 +1,26 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
-import {useMutation} from '@tanstack/react-query'
+import {useMutation, useQueryClient} from '@tanstack/react-query'
 import {api, getApiErrorMessage} from '../lib/axios'
 import Toast from '../components/Toast';
-import { isAxiosError } from 'axios';
 import { useOtpLocalStorage } from '../lib/otpLocalStorage';
 
 export default function OtpVerification() {
     const navigate = useNavigate();
     const location = useLocation();
+    const queryClient = useQueryClient();
 
-    const locationState = location.state as any;
+    const locationState = location.state as { email?: string; expiresInSeconds?: number } | null;
     const email = locationState?.email;
     const initialExpiresIn = locationState?.expiresInSeconds;
 
     // localstorage - otp
-    const [timer, startTimer, stopTimer] = useOtpLocalStorage(email ? `otp_cooldown_${email}` : undefined);
+    const [timer, startTimer, stopTimer] = useOtpLocalStorage(email ? `otp_cooldown_${email}` : undefined, initialExpiresIn);
 
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const canResend = timer === 0;
     const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-    // Start timer on mount if it's not already running in localStorage
-    useEffect(() => {
-        if (email && initialExpiresIn) {
-            const savedExpiry = localStorage.getItem(`otp_cooldown_${email}`);
-            if (!savedExpiry) {
-                startTimer(initialExpiresIn);
-            }
-        }
-    }, [email, initialExpiresIn]);
 
     // toast
     const [toast, setToast] = useState<{
@@ -73,15 +64,10 @@ export default function OtpVerification() {
         },
         onSuccess: ()=>{
              stopTimer();
-             navigate('/login', {replace: true, state:{message: 'Email verified! Please log in.'}})
+             queryClient.invalidateQueries({ queryKey: ['auth-user'] });
+             navigate('/dashboard', {replace: true})
         },
         onError: (error: unknown)=>{
-            console.error("message >", error)
-            console.error("message >", isAxiosError(error))
-            // let err: AxiosError;
-            // console.error("message >", err?.response)
-            // console.error("message >", err?.response?.data)
-            // console.error("message >", err?.request)
             setToast({
                 show: true,
                 message: getApiErrorMessage(error, 'Invalid OTP. Please try again.'),
@@ -103,6 +89,9 @@ export default function OtpVerification() {
         setOtp(['','','','','',''])
         inputRefs.current[0]?.focus();
         setToast({show: true, message: 'New Verification code sent!', type: 'success'})
+    },
+    onError: (error: unknown) => {
+        setToast({ show: true, message: getApiErrorMessage(error, 'Unable to resend the code. Please try again.'), type: 'error' });
     }
    })
 
@@ -171,10 +160,12 @@ export default function OtpVerification() {
                                 type="text"
                                 inputMode="numeric"
                                 maxLength={1}
+                                aria-label={`Verification digit ${index + 1}`}
+                                autoComplete="one-time-code"
                                 value={digit}
                                 onChange={(e) => handleChange(index, e.target.value)}
                                 onKeyDown={(e) => handleKeyDown(index, e)}
-                                className="w-11 h-14 text-black  sm:w-12 sm:h-14 bg-gray-50 border border-gray-200 rounded-lg text-center text-xl font-semibold focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
+                                className="min-w-0 w-full max-w-12 h-14 text-black bg-gray-50 border border-gray-200 rounded-lg text-center text-xl font-semibold focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
                             />
                         ))}
                     </div>

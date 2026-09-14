@@ -19,8 +19,8 @@ const LandingPage = () => {
                     <div className="flex items-center gap-12">
                         <Link to="/" className="text-2xl font-extrabold tracking-tight">FitZone</Link>
                         <nav className="hidden md:flex gap-8">
-                            <Link to="/trainers" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Browse Trainers</Link>
-                            <Link to="/articles" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Articles</Link>
+                            <a href="#features" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Features</a>
+                            <a href="#articles" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Articles</a>
                             <Link to="/about" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">About Us</Link>
                         </nav>
                     </div>
@@ -44,6 +44,7 @@ const LandingPage = () => {
                         onClick={toggleMobileMenu}
                         className="md:hidden p-2 text-gray-600 hover:text-black transition-colors"
                         aria-label="Toggle navigation menu"
+                        aria-expanded={isMobileMenuOpen}
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -54,8 +55,8 @@ const LandingPage = () => {
                 {/* Mobile Nav */}
                 <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden border-t border-gray-100 bg-white absolute w-full left-0 shadow-lg`}>
                     <div className="px-6 py-4 flex flex-col gap-4">
-                        <Link to="/trainers" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Browse Trainers</Link>
-                        <Link to="/articles" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Articles</Link>
+                        <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Features</a>
+                        <a href="#articles" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Articles</a>
                         <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">About Us</Link>
                         <hr className="border-gray-100" />
                         {isAuthenticated ? (
@@ -81,7 +82,7 @@ const LandingPage = () => {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4">
                         <Link to={isAuthenticated ? (user?.role === 'admin' ? '/admin/dashboard' : '/dashboard') : "/register"} className="bg-black text-white px-8 py-3.5 rounded-lg font-medium hover:bg-gray-800 transition-colors text-center">Get Started</Link>
-                        <Link to="/programs" className="bg-white text-black border border-gray-300 px-8 py-3.5 rounded-lg font-medium hover:bg-gray-50 transition-colors text-center">View Programs</Link>
+                        <a href="#programs" className="bg-white text-black border border-gray-300 px-8 py-3.5 rounded-lg font-medium hover:bg-gray-50 transition-colors text-center">View Programs</a>
                     </div>
                 </div>
 
@@ -119,7 +120,7 @@ const LandingPage = () => {
             </section>
 
             {/* Features Section */}
-            <section className="max-w-7xl mx-auto px-6 lg:px-8 py-20 lg:py-32">
+            <section id="features" className="max-w-7xl mx-auto px-6 lg:px-8 py-20 lg:py-32">
                 <div className="max-w-3xl mb-16">
                     <h2 className="text-3xl lg:text-4xl font-bold mb-4">Engineered for Excellence</h2>
                     <p className="text-gray-600 text-lg">Our platform provides the tools required for sustained physical evolution.</p>
@@ -151,7 +152,7 @@ const LandingPage = () => {
                     {/* Feature 3 */}
                     <div className="border border-gray-100 bg-white p-8 lg:p-10 rounded-2xl hover:border-gray-200 hover:shadow-sm transition-all">
                         <div className="w-12 h-12 mb-6 text-black">
-                            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <svg fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"></path>
                             </svg>
                         </div>
@@ -162,7 +163,7 @@ const LandingPage = () => {
             </section>
 
             {/* Pricing Section */}
-            <section className="bg-[#EEF2F9] py-24 lg:py-32">
+            <section id="programs" className="bg-[#EEF2F9] py-16 lg:py-24">
                 <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
                     <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-[#1E293B]">Invest in Yourself</h2>
                     <p className="text-[#475569] text-lg mb-16">Choose the discipline that suits your ambition.</p>
@@ -181,7 +182,7 @@ const LandingPage = () => {
             </section>
 
             {/* Articles Section */}
-            <section className="max-w-7xl mx-auto px-6 lg:px-8 py-20 lg:py-32">
+            <section id="articles" className="max-w-7xl mx-auto px-6 lg:px-8 py-16 lg:py-24">
                 <div className="mb-12">
                     <h2 className="text-3xl lg:text-4xl font-bold mb-3">Performance Journal</h2>
                     <p className="text-gray-600 text-lg">Expert insights on training, recovery, and peak human performance.</p>

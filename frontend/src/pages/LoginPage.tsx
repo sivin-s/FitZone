@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,21 +32,11 @@ export default function LoginPage() {
 
     // toast — pre-fill if redirected because account was blocked
     const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
-        show: false,
-        message: '',
-        type: 'success'
+        show: new URLSearchParams(location.search).get('reason') === 'blocked',
+        message: 'Your account has been blocked by an administrator. Please contact support.',
+        type: 'error'
     });
 
-    useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('reason') === 'blocked') {
-            setToast({
-                show: true,
-                message: 'Your account has been blocked by an administrator. Please contact support.',
-                type: 'error'
-            });
-        }
-    }, [location.search]);
 
 
 

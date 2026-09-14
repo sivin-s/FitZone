@@ -1,3 +1,4 @@
+import type { QueryFilter } from "mongoose";
 import User, { type IUser } from "../../auth/models/user.models.ts";
 import type { IAdminRepository } from "../interfaces/IAdminRepository.interfaces.ts";
 import { storageProvider } from "../../../shared/services/s3Storage.provider.services.ts";
@@ -16,7 +17,7 @@ export class AdminRepository implements IAdminRepository {
     page: number = 1,
     limit: number = 6,
   ): Promise<{ users: IUser[]; total: number }> {
-    const query: any = { role: { $ne: "admin" } };
+    const query: QueryFilter<IUser> = { role: { $ne: "admin" } };
 
     if (search) {
       query.$or = [
@@ -75,7 +76,7 @@ export class AdminRepository implements IAdminRepository {
       ) {
         try {
           await storageProvider.deleteFile(existingUser.profilePicture);
-        } catch (err: any) {
+        } catch {
           // ignore or log
         }
       }

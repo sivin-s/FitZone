@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../../lib/axios";
+import { api, getApiErrorMessage } from "../../lib/axios";
 import AdminEditUserModal, {
   type AdminUser,
 } from "../../components/AdminEditUserModal";
@@ -74,12 +74,14 @@ export default function UserManagement() {
     mutationFn: (userId: string) => api.patch(`/admin/users/${userId}/block`),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
+    onError: (error: unknown) => setToast({ message: getApiErrorMessage(error, "Unable to block user."), type: "error" }),
   });
 
   const unblockMutation = useMutation({
     mutationFn: (userId: string) => api.patch(`/admin/users/${userId}/unblock`),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
+    onError: (error: unknown) => setToast({ message: getApiErrorMessage(error, "Unable to unblock user."), type: "error" }),
   });
 
   const users = data?.users;
@@ -134,12 +136,16 @@ export default function UserManagement() {
         new Date(u.createdAt).toLocaleDateString(),
       ]),
     );
-    const csv = rows.map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
+    const csv = rows.map((r) => r.map((v) => {
+      const safe = /^[=+@\-\t\r\n]/.test(v) ? `'${v}` : v;
+      return `"${safe.replace(/"/g, '""')}"`;
+    }).join(",")).join("\r\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "users.csv";
     a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   };
 
   const updateUserMutation = useMutation({
@@ -171,19 +177,8 @@ export default function UserManagement() {
       setIsEditModalOpen(false);
       setEditingUser(null);
     },
-    onError: (error: any) => {
-      console.error("Failed to update user:", error);
-      let errMsg =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to update user. Please try again.";
-      if (Array.isArray(error.response?.data?.errors)) {
-        const details = error.response.data.errors
-          .map((e: any) => `${e.field}: ${e.message}`)
-          .join(", ");
-        errMsg = `${errMsg}: ${details}`;
-      }
-      setToast({ message: errMsg, type: "error" });
+    onError: (error: unknown) => {
+      setToast({ message: getApiErrorMessage(error, "Failed to update user. Please try again."), type: "error" });
     },
   });
 
@@ -211,7 +206,7 @@ export default function UserManagement() {
       <div className="min-h-screen bg-[#f7f7f6] text-gray-900">
         <div className="px-4 sm:px-6 lg:px-10 py-5 sm:py-7">
           {/* Page Header */}
-          <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <h2 className="text-3xl font-bold tracking-tight">
                 User Management
@@ -230,7 +225,8 @@ export default function UserManagement() {
                 </svg>
                 <input
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  aria-label="Search users"
                   className="w-full outline-none text-[15px] bg-transparent placeholder:text-gray-400"
                   placeholder="Search users by name, email..."
                 />
@@ -317,12 +313,12 @@ export default function UserManagement() {
                     className="grid grid-cols-1 md:grid-cols-12 px-6 py-5 border-t border-gray-100 first:border-t-0 gap-4 md:gap-2 items-center"
                   >
                     <div className="md:col-span-4 flex items-center gap-4">
-                      <img
-                        src={user.profilePicture || ""}
+                      {user.profilePicture ? <img
+                        src={user.profilePicture}
                         alt={user.username}
-                        className="w-11 h-11 rounded-full object-cover"
-                      />
-                      <div>
+                        className="w-11 h-11 shrink-0 rounded-full object-cover"
+                      /> : <span className="w-11 h-11 shrink-0 rounded-full bg-slate-100 grid place-items-center font-semibold">{user.username.charAt(0).toUpperCase()}</span>}
+                      <div className="min-w-0 break-words">
                         <div className="font-semibold text-[15px] leading-5 flex items-center gap-1.5">
                           {user.username}
                           {user.isPremium && (
@@ -368,6 +364,9 @@ export default function UserManagement() {
                           Access
                         </span>
                         <button
+                          aria-label={`${user.isBlocked ? "Unblock" : "Block"} ${user.username}`}
+                          role="switch"
+                          aria-checked={!user.isBlocked}
                           onClick={() =>{
                             handleToggleAccess(user._id, user.isBlocked)
                           }

@@ -36,11 +36,11 @@ export default function AdminLayout() {
     if (path) navigate(path);
   };
   return (
-    <div className='flex h-screen bg-gray-50 overflow-hidden'>
+    <div className='flex flex-col md:flex-row min-h-dvh md:h-dvh bg-gray-50'>
       <div className='shadow-sm'>
         <AdminSidebar activeId={activeId} onNavigate={handleNavigate} />
       </div>
-      <main className='flex-1 overflow-y-auto'>
+      <main className='flex-1 min-w-0 overflow-y-auto'>
         <Outlet />
       </main>
     </div>

@@ -62,7 +62,9 @@ export default function TraineeSidebar({ activeId, onNavigate }: TraineeSidebarP
       defaultActiveId="dashboard"
       activeId={activeId}
       onNavigate={onNavigate}
-      sections={sections}
+      sections={sections.map(section => ({ ...section, items: section.items.map(item => ({
+        ...item, disabled: !['dashboard', 'profile', 'logout'].includes(item.id),
+      })) }))}
     />
   );
 }

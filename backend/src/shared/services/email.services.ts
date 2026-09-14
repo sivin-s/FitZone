@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { env } from "../../config/env.config.ts";
 import type { IEmailService } from "../interfaces/IEmailService.interfaces.ts";
-import {logger} from '../../config/logger.config.ts'
+import { logger } from "../../config/logger.config.ts";
 class EmailService implements IEmailService {
   private _transporter: nodemailer.Transporter;
   constructor() {
@@ -16,7 +16,6 @@ class EmailService implements IEmailService {
   }
 
   async sendOtp(email: string, otp: string): Promise<void> {
-    logger.info(`[EMAIL MOCK] Sending OTP ${otp} to ${email}`);
     const mailOptions = {
       from: `"${env.SMTP_FROM_NAME}" <${env.SMTP_FROM_EMAIL}>`,
       to: email,
@@ -31,7 +30,6 @@ class EmailService implements IEmailService {
     await this._sendEmail(mailOptions, email, "OTP");
   }
   async sendPasswordResetOtp(email: string, otp: string): Promise<void> {
-    logger.info(`[EMAIL MOCK] Sending Password Reset OTP ${otp} to ${email}`);
     const mailOption = {
       from: `"${env.SMTP_FROM_NAME}" <${env.SMTP_FROM_EMAIL}>`,
       to: email,
@@ -74,11 +72,8 @@ class EmailService implements IEmailService {
     try {
       await this._transporter.sendMail(mailOptions);
       logger.info(`✅ ${type} email sent successfully to ${email}`);
-    } catch (error: any) {
-      logger.error(
-        `❌ Failed to send ${type} email to ${email}`,
-        error.message,
-      );
+    } catch (error: unknown) {
+      logger.error({ error }, "Failed to send " + type + " email to " + email);
       throw new Error(
         `Failed to send ${type.toLowerCase()} email. please try again later`,
       );

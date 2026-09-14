@@ -1,6 +1,6 @@
-export interface ILogger{
-    info(message: any, isAdmin?: boolean): void;
-    error(message: any, isAdmin?: boolean): void;
-    warn(message: any, isAdmin?: boolean): void;
-    debug(message: any, isAdmin?: boolean): void;
+export interface ILogger {
+  info(message: unknown, isAdmin?: boolean): void;
+  error(message: unknown, isAdmin?: boolean): void;
+  warn(message: unknown, isAdmin?: boolean): void;
+  debug(message: unknown, isAdmin?: boolean): void;
 }

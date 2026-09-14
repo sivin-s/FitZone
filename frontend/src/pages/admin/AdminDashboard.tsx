@@ -70,12 +70,12 @@ export default function AdminDashboard() {
     }
   });
 
-  const usersList: any[] = data?.users || [];
+  const usersList: { role: string; isVerified: boolean; isPremium?: boolean }[] = data?.users || [];
   
   // Calculate counts
-  const totalUsersCount = usersList.filter((u: any) => u.role === 'user').length;
-  const verifiedTrainersCount = usersList.filter((u: any) => u.role === 'trainer').length;
-  const subscriptionsCount = usersList.filter((u: any) => u.role === 'user' && u.isPremium).length;
+  const totalUsersCount = usersList.filter((u) => u.role === 'user').length;
+  const verifiedTrainersCount = usersList.filter((u) => u.role === 'trainer' && u.isVerified).length;
+  const subscriptionsCount = usersList.filter((u) => u.role === 'user' && u.isPremium).length;
 
   return (
     <div className="min-h-screen bg-white">

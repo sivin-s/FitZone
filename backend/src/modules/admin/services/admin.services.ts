@@ -16,6 +16,16 @@ export class AdminService implements IAdminService {
   ) {}
 
   async getUsers(search?: string, page: number = 1, limit: number = 20) {
+    if (
+      (search !== undefined && typeof search !== "string") ||
+      !Number.isInteger(page) ||
+      page < 1 ||
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > 1000
+    ) {
+      throw new BadRequestError("Invalid search or pagination parameters.");
+    }
     return await this._adminRepository.findUsers(search, page, limit);
   }
   async blockUser(userId: string, adminId: string) {
@@ -51,6 +61,9 @@ export class AdminService implements IAdminService {
   ) {
     if (userId === adminId && data.role && data.role !== "admin") {
       throw new BadRequestError("Admins cannot change their own role.");
+    }
+    if (userId === adminId && data.isBlocked) {
+      throw new BadRequestError("You cannot block your own account");
     }
     return await this._adminRepository.updateUser(userId, data);
   }

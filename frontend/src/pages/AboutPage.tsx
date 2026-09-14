@@ -19,8 +19,8 @@ const AboutPage = () => {
                     <div className="flex items-center gap-12">
                         <Link to="/" className="text-2xl font-extrabold tracking-tight">FitZone</Link>
                         <nav className="hidden md:flex gap-8">
-                            <Link to="/trainers" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Browse Trainers</Link>
-                            <Link to="/articles" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Articles</Link>
+                            <a href="/#features" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Features</a>
+                            <a href="/#articles" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Articles</a>
                             <Link to="/about" className="text-sm font-medium text-black transition-colors">About Us</Link>
                         </nav>
                     </div>
@@ -41,6 +41,7 @@ const AboutPage = () => {
                         onClick={toggleMobileMenu}
                         className="md:hidden p-2 text-gray-600 hover:text-black transition-colors"
                         aria-label="Toggle navigation menu"
+                        aria-expanded={isMobileMenuOpen}
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -51,8 +52,8 @@ const AboutPage = () => {
                 {/* Mobile Nav */}
                 <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden border-t border-gray-100 bg-white absolute w-full left-0 shadow-lg`}>
                     <div className="px-6 py-4 flex flex-col gap-4">
-                        <Link to="/trainers" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Browse Trainers</Link>
-                        <Link to="/articles" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Articles</Link>
+                        <a href="/#features" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Features</a>
+                        <a href="/#articles" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Articles</a>
                         <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-black transition-colors">About Us</Link>
                         <hr className="border-gray-100" />
                         {isAuthenticated ? (

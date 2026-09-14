@@ -1,3 +1,3 @@
 export const TYPES = {
-    ILogger: Symbol.for("ILogger")
-}
+  ILogger: Symbol.for("ILogger"),
+};

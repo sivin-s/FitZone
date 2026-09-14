@@ -11,13 +11,13 @@ export const api = axios.create({
 
 //  performs the token refresh
 const refreshAuthLogic = async () => {
-    const publicPaths = ['/', '/login', '/register', '/admin/login', '/forgot-password', '/verify-otp'];
+    const publicPaths = ['/', '/about', '/login', '/register', '/admin/login', '/forgot-password', '/verify-otp'];
     if (publicPaths.includes(window.location.pathname)) {
         return Promise.reject(new Error("Skipping token refresh on public routes."));
     }
 
     try {
-        await api.post('/auth/refresh-token');
+        await axios.post('/api/v1/auth/refresh-token', {}, { withCredentials: true });
         return Promise.resolve(); // if it has no value it mark as 'fulfilled'.
     } catch (error) {
         // Check if the failure is because the account was blocked
@@ -27,7 +27,8 @@ const refreshAuthLogic = async () => {
 
         const isBlocked = message.toLowerCase().includes('blocked');
         console.warn("session expired. Redirecting to login");
-        window.location.href = isBlocked ? '/login?reason=blocked' : '/login';
+        const loginPath = window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login';
+        window.location.href = isBlocked ? loginPath + '?reason=blocked' : loginPath;
         return Promise.reject(error);
     }
 }
@@ -41,6 +42,7 @@ createAuthRefreshInterceptor(api, refreshAuthLogic, {
 
         const url = error.config?.url;
         return !(
+            url?.includes('/auth/refresh-token') ||
             url?.includes('/auth/login') ||
             url?.includes('/auth/register') ||
             url?.includes('/auth/google') ||

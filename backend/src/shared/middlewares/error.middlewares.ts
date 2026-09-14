@@ -27,7 +27,10 @@ export const errorMiddleware = (
   let errors: { field: string; message: string }[] | Record<string, unknown> =
     [];
 
-  if (error instanceof ZodError) {
+  if (err.name === "MulterError") {
+    statusCode = HttpStatus.BAD_REQUEST;
+    message = "Upload failed. Select one image smaller than 5 MB.";
+  } else if (error instanceof ZodError) {
     statusCode = HttpStatus.BAD_REQUEST;
     message = "Validation failed";
     errors = error.flatten().fieldErrors || {};

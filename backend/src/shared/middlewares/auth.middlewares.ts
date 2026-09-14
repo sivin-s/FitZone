@@ -2,17 +2,20 @@ import type { NextFunction, Request, Response } from "express";
 import { asyncHandler } from "../handler/asyncHandler.handler.ts";
 import { UnauthorizedError } from "../errors/UnauthorizedError.errros.ts";
 import { jwtService } from "../services/jwt.services.ts";
-import type { AuthRequest, AuthPayload } from "../../types/AuthRequest.types.ts";
+import type {
+  AuthRequest,
+  AuthPayload,
+} from "../../types/AuthRequest.types.ts";
 import User from "../../modules/auth/models/user.models.ts";
 
 //logger not di
-import {logger} from '../../config/logger.config.ts'
+import { logger } from "../../config/logger.config.ts";
 
 const extractToken = (req: Request): string | null => {
   const isFromAdmin = req.headers.referer?.includes("/admin");
   const cookieToken = isFromAdmin
-    ? (req.cookies?.adminAccessToken || req.cookies?.userAccessToken)
-    : (req.cookies?.userAccessToken || req.cookies?.adminAccessToken);
+    ? req.cookies?.adminAccessToken || req.cookies?.userAccessToken
+    : req.cookies?.userAccessToken || req.cookies?.adminAccessToken;
 
   if (typeof cookieToken === "string" && cookieToken.trim() !== "") {
     return cookieToken;
@@ -43,10 +46,12 @@ export const authenticate = asyncHandler(
       throw new UnauthorizedError("User account not found.");
     }
     if (user.isBlocked) {
-      throw new UnauthorizedError("Your account has been blocked. Please contact support.");
+      throw new UnauthorizedError(
+        "Your account has been blocked. Please contact support.",
+      );
     }
 
-    logger.debug("payload >> " + JSON.stringify(payload))
+    logger.debug("payload >> " + JSON.stringify(payload));
     req.user = payload;
     next();
   },

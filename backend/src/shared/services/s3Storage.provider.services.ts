@@ -31,9 +31,9 @@ export class S3StorageProvider implements IStorageProvider {
     try {
       await this._s3Client.send(command);
       return `https://${env.AWS_S3_BUCKET}.s3.${env.AWS_REGION}.amazonaws.com/${fileKey}`;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.warn(
-        `S3 Upload with public-read ACL failed: ${error.message}. Retrying without ACL...`,
+        `S3 Upload with public-read ACL failed: ${error instanceof Error ? error.message : String(error)}. Retrying without ACL...`,
       );
       const retryCommand = new PutObjectCommand({
         Bucket: env.AWS_S3_BUCKET,
@@ -44,8 +44,10 @@ export class S3StorageProvider implements IStorageProvider {
       try {
         await this._s3Client.send(retryCommand);
         return `https://${env.AWS_S3_BUCKET}.s3.${env.AWS_REGION}.amazonaws.com/${fileKey}`;
-      } catch (retryError: any) {
-        logger.error(`S3 Upload failed: ${retryError.message}`);
+      } catch (retryError: unknown) {
+        logger.error(
+          `S3 Upload failed: ${retryError instanceof Error ? retryError.message : String(retryError)}`,
+        );
         if (env.NODE_ENV !== "production") {
           logger.info("Falling back to Base64 Data URI for local development");
           const base64Data = file.buffer.toString("base64");
@@ -66,8 +68,8 @@ export class S3StorageProvider implements IStorageProvider {
     });
     try {
       await this._s3Client.send(command);
-    } catch (error: any) {
-      logger.error("S3 Delete Failed:", error.message);
+    } catch (error: unknown) {
+      logger.error({ error }, "S3 delete failed");
     }
   }
   async getPresignedUrl(fileUrl: string): Promise<string> {
@@ -85,8 +87,10 @@ export class S3StorageProvider implements IStorageProvider {
       });
 
       return await getSignedUrl(this._s3Client, command, { expiresIn: 3600 });
-    } catch (error: any) {
-      logger.error(`Failed to generate presigned URL: ${error.message}`);
+    } catch (error: unknown) {
+      logger.error(
+        `Failed to generate presigned URL: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return fileUrl;
     }
   }

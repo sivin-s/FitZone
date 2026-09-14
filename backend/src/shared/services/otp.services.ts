@@ -1,17 +1,17 @@
 import { redisClient } from "../../config/redis.config.ts";
-import cryto from "crypto";
-import type {IOtpService} from '../interfaces/IOtpService.interfaces.ts'
+import crypto from "crypto";
+import type { IOtpService } from "../interfaces/IOtpService.interfaces.ts";
 import { env } from "../../config/env.config.ts";
 
-class OtpService {
+class OtpService implements IOtpService {
   private readonly _OTP_PREFIX = env.OTP_PREFIX;
   private readonly _OTP_EXPIRY_SECONDS = env.OTP_EXPIRY_SECONDS;
 
   generateOtp(): string {
-    return cryto.randomInt(100000, 999999).toString();
+    return crypto.randomInt(100000, 1000000).toString();
   }
 
-  getExpirySeconds():number{
+  getExpirySeconds(): number {
     return env.OTP_EXPIRY_SECONDS;
   }
 

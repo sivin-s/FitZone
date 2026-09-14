@@ -30,6 +30,7 @@ export interface SidebarItem {
   id: string;
   label: string;
   icon: LucideIcon;
+  disabled?: boolean;
 }
 
 export interface SidebarSection {
@@ -59,6 +60,7 @@ export default function Sidebar({
   theme = "neutral",
 }: SidebarProps) {
   const [internalActive, setInternalActive] = useState(defaultActiveId);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const isControlled = activeId !== undefined;
   const current = isControlled ? activeId : internalActive;
   const colors = THEMES[theme] ?? THEMES.neutral;
@@ -66,10 +68,14 @@ export default function Sidebar({
   const handleClick = (id: string) => {
     if (!isControlled) setInternalActive(id);
     onNavigate?.(id);
+    setMobileOpen(false);
   };
 
   return (
-    <aside className={`flex h-screen w-64 flex-col ${colors.bg} border-r ${colors.border} py-5`}>
+    <aside className={`flex w-full md:w-64 md:h-dvh shrink-0 flex-col ${colors.bg} border-r ${colors.border} py-4 md:py-5 md:overflow-y-auto`}>
+      <button type="button" className="md:hidden mx-4 mb-3 rounded-lg border border-slate-700 px-4 py-2 text-white text-left" aria-expanded={mobileOpen} aria-controls="portal-navigation" onClick={() => setMobileOpen(!mobileOpen)}>
+        {mobileOpen ? "Close navigation" : "Open navigation"}
+      </button>
       <div className="px-5 mb-6">
         <h1 className="text-lg font-bold text-white leading-tight">{brand}</h1>
         {subtitle && (
@@ -79,6 +85,7 @@ export default function Sidebar({
         )}
       </div>
 
+      <div id="portal-navigation" className={`${mobileOpen ? "flex" : "hidden"} md:flex flex-col flex-1 gap-3`}>
       {sections.map((section, i) => (
         <div key={i} className={section.pinBottom ? "mt-auto px-3" : "px-3"}>
           {section.divider && <div className={`my-3 border-t ${colors.border}`} />}
@@ -90,15 +97,17 @@ export default function Sidebar({
           )}
 
           <nav className="flex flex-col gap-1">
-            {section.items.map(({ id, label, icon: Icon }) => {
+            {section.items.map(({ id, label, icon: Icon, disabled }) => {
               const isActive = current === id;
               return (
                 <button
                   key={id}
                   type="button"
+                  disabled={disabled}
+                  title={disabled ? "Coming soon" : undefined}
                   onClick={() => handleClick(id)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm ${
+                  className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed ${
                     isActive ? colors.active : `${colors.text} ${colors.hover}`
                   }`}
                 >
@@ -113,6 +122,7 @@ export default function Sidebar({
           </nav>
         </div>
       ))}
+      </div>
     </aside>
   );
 }

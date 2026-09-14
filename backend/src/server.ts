@@ -6,16 +6,15 @@ dotenv.config();
 import app from "./app.ts";
 import { connectDB } from "./config/database.config.ts";
 
-// DI container 
-import {appContainer} from './DiContainer.ts'
+// DI container
+import { appContainer } from "./DiContainer.ts";
 
 // type
-import {LOGGER_TYPES} from './DITypes/index.DITypes.ts'
-import type {ILogger} from './shared/interfaces/ILogger.interfaces.ts'
+import { LOGGER_TYPES } from "./DITypes/index.DITypes.ts";
+import type { ILogger } from "./shared/interfaces/ILogger.interfaces.ts";
 
 // retrieve the singleton LoggerService from the DI container
-const logger = appContainer.get<ILogger>(LOGGER_TYPES.ILogger)
-
+const logger = appContainer.get<ILogger>(LOGGER_TYPES.ILogger);
 
 const PORT = process.env.PORT || 8080;
 
@@ -23,8 +22,11 @@ const startServer = async () => {
   try {
     await connectDB();
     app.listen(PORT, () => logger.info(`server started 🌐 ,${PORT}`));
-  } catch (err: any) {
-    logger.error(`❌ Server startup failed ,${err.message}`);
+  } catch (error: unknown) {
+    logger.error(
+      "Server startup failed: " +
+        (error instanceof Error ? error.message : String(error)),
+    );
     process.exit(1);
   }
 };

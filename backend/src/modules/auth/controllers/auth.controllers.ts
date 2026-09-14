@@ -4,7 +4,7 @@ import { ApiResponse } from "../../../shared/responses/ApiResponse.responses.ts"
 import { AuthRepository } from "../repositories/auth.repositories.ts";
 import { jwtService } from "../../../shared/services/jwt.services.ts";
 import { UnauthorizedError } from "../../../shared/errors/UnauthorizedError.errros.ts";
-import type { AuthPayload, AuthRequest } from "../../../types/AuthRequest.types.ts";
+import type { AuthPayload } from "../../../types/AuthRequest.types.ts";
 import User from "../models/user.models.ts";
 import {
   getAccessTokenOptions,
@@ -16,21 +16,24 @@ import type { IAuthService } from "../interfaces/IAuthService.interfaces.ts";
 
 // injection
 import { injectable, inject } from "inversify";
-import { AUTH_TYPES } from "../../../DITypes/index.DITypes.ts"
+import { AUTH_TYPES } from "../../../DITypes/index.DITypes.ts";
 
 @injectable()
 export class AuthController implements IAuthController {
   constructor(
     @inject(AUTH_TYPES.IAuthService) private _authService: IAuthService,
     @inject(AUTH_TYPES.IAuthRepository) private _authRepository: AuthRepository,
-  ) { }
+  ) {}
 
   register = asyncHandler(async (req: Request, res: Response) => {
     const { username, email, password } = req.body;
     const result = await this._authService.register(username, email, password);
-    res
-      .status(201)
-      .json(new ApiResponse(201, result.message, { userId: result.userId, expiresInSeconds: result.expiresInSeconds }));
+    res.status(201).json(
+      new ApiResponse(201, result.message, {
+        userId: result.userId,
+        expiresInSeconds: result.expiresInSeconds,
+      }),
+    );
   });
 
   // Returns session info by reading only userAccessToken, and checks isBlocked status
@@ -48,9 +51,13 @@ export class AuthController implements IAuthController {
     // Check if the user has been blocked since the token was issued
     const user = await User.findById(payload.userId).select("isBlocked");
     if (!user || user.isBlocked) {
-      throw new UnauthorizedError("Your account has been blocked. Please contact support.");
+      throw new UnauthorizedError(
+        "Your account has been blocked. Please contact support.",
+      );
     }
-    res.status(200).json(new ApiResponse(200, "User session retrieved.", payload));
+    res
+      .status(200)
+      .json(new ApiResponse(200, "User session retrieved.", payload));
   });
 
   // Returns session info by reading only adminAccessToken
@@ -68,7 +75,9 @@ export class AuthController implements IAuthController {
     if (payload.role !== "admin") {
       throw new UnauthorizedError("Token is not an admin token.");
     }
-    res.status(200).json(new ApiResponse(200, "Admin session retrieved.", payload));
+    res
+      .status(200)
+      .json(new ApiResponse(200, "Admin session retrieved.", payload));
   });
 
   verifyOtp = asyncHandler(async (req: Request, res: Response) => {
@@ -93,7 +102,11 @@ export class AuthController implements IAuthController {
   resendOtp = asyncHandler(async (req: Request, res: Response) => {
     const { email } = req.body;
     const result = await this._authService.resendOtp(email);
-    res.status(200).json(new ApiResponse(200, result.message, { expiresInSeconds: result.expiresInSeconds }));
+    res.status(200).json(
+      new ApiResponse(200, result.message, {
+        expiresInSeconds: result.expiresInSeconds,
+      }),
+    );
   });
 
   login = asyncHandler(async (req: Request, res: Response) => {
@@ -139,8 +152,8 @@ export class AuthController implements IAuthController {
     //notice: /refresh-token
     const isFromAdmin = req.headers.referer?.includes("/admin");
     const refreshToken = isFromAdmin
-      ? (req.cookies?.adminRefreshToken || req.cookies?.userRefreshToken)
-      : (req.cookies?.userRefreshToken || req.cookies?.adminRefreshToken);
+      ? req.cookies?.adminRefreshToken || req.cookies?.userRefreshToken
+      : req.cookies?.userRefreshToken || req.cookies?.adminRefreshToken;
 
     if (!refreshToken) {
       throw new UnauthorizedError("Refresh token missing. Please login again");
@@ -163,7 +176,9 @@ export class AuthController implements IAuthController {
     if (!dbUser || dbUser.isBlocked) {
       res.clearCookie("userRefreshToken", { path: "/", maxAge: 0 });
       res.clearCookie("userAccessToken", { path: "/", maxAge: 0 });
-      throw new UnauthorizedError("Your account has been blocked. Please contact support.");
+      throw new UnauthorizedError(
+        "Your account has been blocked. Please contact support.",
+      );
     }
 
     const role = payload?.role;
@@ -182,7 +197,11 @@ export class AuthController implements IAuthController {
   forgotPassword = asyncHandler(async (req: Request, res: Response) => {
     const { email } = req.body;
     const result = await this._authService.forgotPassword(email);
-    res.status(200).json(new ApiResponse(200, result.message, { expiresInSeconds: result.expiresInSeconds }));
+    res.status(200).json(
+      new ApiResponse(200, result.message, {
+        expiresInSeconds: result.expiresInSeconds,
+      }),
+    );
   });
 
   resetPassword = asyncHandler(async (req: Request, res: Response) => {
