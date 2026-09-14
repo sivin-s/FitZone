@@ -11,7 +11,7 @@ export const useOtpLocalStorage = (key = "otp_coolDown_time") => {
         return 0;
     });
 
-    const intervalRef = useRef(null);
+    const intervalRef = useRef<any>(null);
 
     // function to set/start target timer
     const startTimer = (seconds: number) => {

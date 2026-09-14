@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import AdminLogin from './pages/admin/AdminLogin';
 import ResetOTPPasswordPage from './pages/ResetOTPPasswordPage';  // forgot-password
+import AboutPage from './pages/AboutPage';
 
 // Protected Pages
 import UserDashboard from './pages/UserDashboard';
@@ -38,6 +39,7 @@ const queryClient = new QueryClient({
 const router = createBrowserRouter([
   // PUBLIC ROUTES
   { path: '/', element: <LandingPage /> },
+  { path: '/about', element: <AboutPage /> },
 
   // GUEST ONLY ROUTES (Redirects if already logged in)
   {
@@ -65,10 +67,10 @@ const router = createBrowserRouter([
   },
   // Admin protected
   {
-    element: <AdminRoute />, 
+    element: <AdminRoute />,
     children: [ // admin paths
       {
-        element: <AdminLayout />, 
+        element: <AdminLayout />,
         children: [
           { path: '/admin/dashboard', element: <AdminDashboard /> },
           { path: '/admin/users', element: <UserManagement /> },
@@ -76,7 +78,7 @@ const router = createBrowserRouter([
       },
     ],
   },
-  {path: '*', element: <NotFoundPage/>}  // catch all non specific path
+  { path: '*', element: <NotFoundPage /> }  // catch all non specific path
 ]);
 
 export default function App() {

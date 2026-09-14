@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
-import { useAdminAuth } from '../hooks/useAdminAuth';
 
 const LandingPage = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { isAuthenticated, user } = useAuth();
-    const { isAdminAuthenticated } = useAdminAuth();
 
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -23,6 +21,7 @@ const LandingPage = () => {
                         <nav className="hidden md:flex gap-8">
                             <Link to="/trainers" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Browse Trainers</Link>
                             <Link to="/articles" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Articles</Link>
+                            <Link to="/about" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">About Us</Link>
                         </nav>
                     </div>
 
@@ -57,6 +56,7 @@ const LandingPage = () => {
                     <div className="px-6 py-4 flex flex-col gap-4">
                         <Link to="/trainers" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Browse Trainers</Link>
                         <Link to="/articles" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">Articles</Link>
+                        <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-800 hover:text-black transition-colors">About Us</Link>
                         <hr className="border-gray-100" />
                         {isAuthenticated ? (
                             <Link to={user?.role === 'admin' ? "/admin/dashboard" : "/dashboard"} onClick={() => setIsMobileMenuOpen(false)} className="bg-black text-white text-sm font-medium px-4 py-2 rounded-md text-center hover:bg-gray-800 transition-colors">Dashboard</Link>
@@ -206,14 +206,6 @@ const LandingPage = () => {
                         <div className="font-extrabold text-xl tracking-tight mb-2 text-black">FitZone</div>
                         <div className="text-sm text-gray-500">&copy; 2024 FitZone. All rights reserved. High-Performance Clarity.</div>
                     </div>
-
-                    <nav className="flex flex-wrap justify-center gap-6 text-sm font-medium text-gray-500">
-                        <Link to="/about" className="hover:text-black transition-colors">About Us</Link>
-                        <Link to="/privacy" className="hover:text-black transition-colors">Privacy Policy</Link>
-                        <Link to="/terms" className="hover:text-black transition-colors">Terms of Service</Link>
-                        <Link to="/support" className="hover:text-black transition-colors">Contact Support</Link>
-                        <Link to="/careers" className="hover:text-black transition-colors">Careers</Link>
-                    </nav>
                 </div>
             </footer>
 

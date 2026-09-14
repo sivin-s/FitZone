@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { useOtpLocalStorage } from '../lib/otpLocalStorage';
 
 export default function ForgotPasswordPage() {
     const navigate = useNavigate();

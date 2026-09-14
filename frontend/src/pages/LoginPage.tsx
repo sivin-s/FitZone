@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate, useLocation, useSearchParams, Link } from 'react-router';
+import { useNavigate, useLocation, Link } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, getApiErrorMessage } from '../lib/axios';
 import Toast from '../components/Toast';
@@ -29,7 +29,6 @@ export default function LoginPage() {
     const location = useLocation();
     const queryClient = useQueryClient();
     const [showPassword, setShowPassword] = useState(false);
-    const [searchParams] = useSearchParams();
 
     // toast — pre-fill if redirected because account was blocked
     const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({

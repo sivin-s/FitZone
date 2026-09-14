@@ -3,12 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import {useMutation} from '@tanstack/react-query'
 import {api, getApiErrorMessage} from '../lib/axios'
 import Toast from '../components/Toast';
-import { AxiosError, isAxiosError } from 'axios';
+import { isAxiosError } from 'axios';
 import { useOtpLocalStorage } from '../lib/otpLocalStorage';
-
-type OtpLocationState = {
-    email?: string;
-};
 
 export default function OtpVerification() {
     const navigate = useNavigate();

@@ -1,4 +1,4 @@
-import axios, { AxiosError, isAxiosError } from 'axios';
+import axios, { isAxiosError } from 'axios';
 import createAuthRefreshInterceptor from 'axios-auth-refresh';
 
 export const api = axios.create({
@@ -10,7 +10,7 @@ export const api = axios.create({
 })
 
 //  performs the token refresh
-const refreshAuthLogic = async (failedRequest: any) => {
+const refreshAuthLogic = async () => {
     const publicPaths = ['/', '/login', '/register', '/admin/login', '/forgot-password', '/verify-otp'];
     if (publicPaths.includes(window.location.pathname)) {
         return Promise.reject(new Error("Skipping token refresh on public routes."));
