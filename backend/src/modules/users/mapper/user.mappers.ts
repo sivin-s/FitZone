@@ -1,5 +1,5 @@
-import type { IUser } from "../../auth/models/user.models.ts";
-import type { UserDto } from "../dto/user.dto.ts";
+import  {type IUser } from "../../auth/models/user.models.ts";
+import {type UserDto } from "../dto/user.dto.ts";
 
 export class UserMapper {
   static toDto(user: IUser): UserDto {
