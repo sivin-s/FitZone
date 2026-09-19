@@ -1,13 +1,21 @@
 import { useState } from 'react';
 
+const CameraIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+    <circle cx="12" cy="13" r="4" />
+  </svg>
+);
+
 interface AdminEditUserFormProps {
   user: AdminUser;
   onClose: () => void;
-  onSave: (updatedUser: AdminUser) => void;
+  onSave: (updatedUser: AdminUser, avatarFile: File | null) => Promise<void>;
 }
 
 function AdminEditUserForm({ user, onClose, onSave }: AdminEditUserFormProps) {
   const [formData, setFormData] = useState<AdminUser>(user);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -21,16 +29,33 @@ function AdminEditUserForm({ user, onClose, onSave }: AdminEditUserFormProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    setTimeout(() => {
-      onSave(formData);
-      setIsSubmitting(false);
-      onClose();
-    }, 600);
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      setFormData((prev) => ({ ...prev, avatar: URL.createObjectURL(file) }));
+    }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isValid) return;
+    setIsSubmitting(true);
+    try {
+      await onSave(formData, avatarFile);
+    } catch {
+      // parent handles the toast; just reset spinner
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const isEmailValid = formData.email.trim() !== '' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
+  const isNameValid = formData.name.trim() !== '' && /^[a-zA-Z\s]+$/.test(formData.name);
+  const isPhoneValid = !formData.phone || formData.phone.trim() === '' || /^\d{10}$/.test(formData.phone);
+  const isPincodeValid = !formData.pincode || formData.pincode.trim() === '' || /^\d{6}$/.test(formData.pincode);
+  const isCityValid = !formData.city || formData.city.trim() === '' || /^[a-zA-Z\s]+$/.test(formData.city.trim());
+  const isValid = isEmailValid && isNameValid && isPhoneValid && isPincodeValid && isCityValid;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -55,15 +80,35 @@ function AdminEditUserForm({ user, onClose, onSave }: AdminEditUserFormProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-            <img src={formData.avatar} alt={formData.name} className="w-12 h-12 rounded-full object-cover border border-gray-200" />
-            <div>
-              <p className="text-sm font-semibold text-gray-900">{formData.name}</p>
-              <p className="text-xs text-gray-500">{formData.email}</p>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+          {/* Header Info Card */}
+          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 mb-2">
+            <div className="relative group cursor-pointer flex-shrink-0 w-12 h-12 rounded-full overflow-hidden" onClick={() => document.getElementById('admin-avatar-upload')?.click()}>
+              {formData.avatar ? (
+                <img src={formData.avatar} alt={formData.name} className="w-full h-full object-cover border border-gray-200 transition-opacity duration-200" />
+              ) : (
+                <div className="w-full h-full bg-black text-white flex items-center justify-center font-bold text-lg">
+                  {formData.name ? formData.name.charAt(0).toUpperCase() : '?'}
+                </div>
+              )}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <CameraIcon />
+              </div>
+            </div>
+            <input
+              id="admin-avatar-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-gray-900 truncate">{formData.name || 'No Name'}</p>
+              <p className="text-xs text-gray-500 truncate">{formData.email}</p>
             </div>
           </div>
 
+          {/* Full Name */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
             <input
@@ -72,18 +117,44 @@ function AdminEditUserForm({ user, onClose, onSave }: AdminEditUserFormProps) {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
+              className={`w-full px-4 py-2 bg-white border ${!isNameValid ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-black'
+                } rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
             />
+            {!formData.name.trim() ? (
+              <p className="mt-1 text-xs text-red-500 font-medium">Full name is required.</p>
+            ) : !/^[a-zA-Z\s]+$/.test(formData.name) ? (
+              <p className="mt-1 text-xs text-red-500 font-medium">Full name can only contain letters and spaces.</p>
+            ) : null}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {/* Email Address */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className={`w-full px-4 py-2 bg-white border ${!isEmailValid ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-black'
+                } rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
+            />
+            {!formData.email.trim() ? (
+              <p className="mt-1 text-xs text-red-500 font-medium">Email address is required.</p>
+            ) : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? (
+              <p className="mt-1 text-xs text-red-500 font-medium">Please enter a valid email address.</p>
+            ) : null}
+          </div>
+
+          {/* Role & Gender */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Role</label>
               <select
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all appearance-none"
+                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all appearance-none"
               >
                 <option value="User">User</option>
                 <option value="Trainer">Trainer</option>
@@ -92,20 +163,75 @@ function AdminEditUserForm({ user, onClose, onSave }: AdminEditUserFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Status</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Gender</label>
               <select
-                name="status"
-                value={formData.status}
+                name="gender"
+                value={formData.gender || ''}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all appearance-none"
+                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all appearance-none"
               >
-                <option value="Active">Active</option>
-                <option value="Pending">Pending</option>
-                <option value="Blocked">Blocked</option>
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
               </select>
             </div>
           </div>
 
+          {/* Phone Number & City */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Phone Number</label>
+              <input
+                type="text"
+                name="phone"
+                value={formData.phone || ''}
+                onChange={handleChange}
+                placeholder="10-digit phone number"
+                className={`w-full px-4 py-2 bg-white border ${!isPhoneValid ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-black'
+                  } rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
+              />
+              {!isPhoneValid && (
+                <p className="mt-1 text-xs text-red-500 font-medium">Must be a valid 10-digit number.</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">City</label>
+              <input
+                type="text"
+                name="city"
+                value={formData.city || ''}
+                onChange={handleChange}
+                placeholder="e.g. New York"
+                className={`w-full px-4 py-2 bg-white border ${
+                  !isCityValid ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-black'
+                } rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
+              />
+              {!isCityValid && (
+                <p className="mt-1 text-xs text-red-500 font-medium">City can only contain letters and spaces.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Pincode */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Pincode</label>
+            <input
+              type="text"
+              name="pincode"
+              value={formData.pincode || ''}
+              onChange={handleChange}
+              placeholder="6-digit pincode"
+              className={`w-full px-4 py-2 bg-white border ${!isPincodeValid ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-black'
+                } rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
+            />
+            {!isPincodeValid && (
+              <p className="mt-1 text-xs text-red-500 font-medium">Must be a valid 6-digit pincode.</p>
+            )}
+          </div>
+
+          {/* Platform Access */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
             <div>
               <p className="text-sm font-semibold text-gray-900">Platform Access</p>
@@ -113,7 +239,7 @@ function AdminEditUserForm({ user, onClose, onSave }: AdminEditUserFormProps) {
                 {formData.access ? 'User can log in and use the platform.' : 'User is blocked from logging in.'}
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
               <input
                 type="checkbox"
                 name="access"
@@ -125,6 +251,7 @@ function AdminEditUserForm({ user, onClose, onSave }: AdminEditUserFormProps) {
             </label>
           </div>
 
+          {/* Footer Actions */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
             <button
               type="button"
@@ -136,8 +263,8 @@ function AdminEditUserForm({ user, onClose, onSave }: AdminEditUserFormProps) {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="px-5 py-2.5 text-sm font-semibold text-white bg-black rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              disabled={isSubmitting || !isValid}
+              className="px-5 py-2.5 text-sm font-semibold text-white bg-black rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
@@ -167,13 +294,17 @@ export interface AdminUser {
   joined: string;
   access: boolean;
   avatar: string;
+  phone?: string;
+  gender?: string;
+  city?: string;
+  pincode?: string;
 }
 
 interface AdminEditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: AdminUser | null;
-  onSave: (updatedUser: AdminUser) => void;
+  onSave: (updatedUser: AdminUser, avatarFile: File | null) => Promise<void>;
 }
 
 export default function AdminEditUserModal({ isOpen, onClose, user, onSave }: AdminEditUserModalProps) {

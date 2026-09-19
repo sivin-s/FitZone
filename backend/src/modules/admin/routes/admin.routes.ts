@@ -1,15 +1,33 @@
 import { Router } from "express";
-import { authenticate } from "../../../middleware/auth.middleware.ts";
-import { authorizeRoles } from "../../../middleware/role.middleware.ts";
-import { adminController } from "../controllers/admin.controller.ts";
+import { authenticate } from "../../../shared/middlewares/auth.middlewares.ts";
+import { authorizeRoles } from "../../../shared/middlewares/role.middlewares.ts";
+import { imageUpload } from "../../../shared/middlewares/imageUpload.middlewares.ts";
+
+// injection
+
+import { appContainer } from "../../../DiContainer.ts";
+import { TYPES } from "../../../DITypes/admin.DITypes.ts";
+import type { IAdminController } from "../interfaces/IAdminController.interfaces.ts";
+import { validate } from "../../../shared/middlewares/validate.middlewares.ts";
+import { updateUserSchema } from "../schemas/updateUser.schemas.ts";
+
+// const adminController = adminContainer.get<IAdminController>(TYPES.IAdminController)
+const adminController = appContainer.get<IAdminController>(
+  TYPES.IAdminController,
+);
 
 const router = Router();
 
-router.use(authenticate, authorizeRoles("admin"));
+router.use(authenticate, authorizeRoles("admin")); // router level middleware - notice: each route have different router level middlewares.
 
 router.get("/users", adminController.getUsers);
 router.patch("/users/:userId/block", adminController.blockUser);
 router.patch("/users/:userId/unblock", adminController.unblockUser);
-router.patch("/users/:userId", adminController.updateUser);
+router.patch(
+  "/users/:userId",
+  imageUpload.single("image"),
+  validate(updateUserSchema),
+  adminController.updateUser,
+);
 
 export default router;

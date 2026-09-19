@@ -1,24 +1,26 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
-import {useMutation} from '@tanstack/react-query'
+import {useMutation, useQueryClient} from '@tanstack/react-query'
 import {api, getApiErrorMessage} from '../lib/axios'
 import Toast from '../components/Toast';
-
-type OtpLocationState = {
-    email?: string;
-};
+import { useOtpLocalStorage } from '../lib/otpLocalStorage';
 
 export default function OtpVerification() {
     const navigate = useNavigate();
     const location = useLocation();
+    const queryClient = useQueryClient();
 
-    const email = (location.state as OtpLocationState | null)?.email ?? 'your email';
+    const locationState = location.state as { email?: string; expiresInSeconds?: number } | null;
+    const email = locationState?.email;
+    const initialExpiresIn = locationState?.expiresInSeconds;
+
+    // localstorage - otp
+    const [timer, startTimer, stopTimer] = useOtpLocalStorage(email ? `otp_cooldown_${email}` : undefined, initialExpiresIn);
 
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
-    const [timer, setTimer] = useState(55);
     const canResend = timer === 0;
-    const isTimerRunning = timer > 0;
     const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+
 
     // toast
     const [toast, setToast] = useState<{
@@ -37,13 +39,6 @@ export default function OtpVerification() {
     }
 }, [email, navigate]);
 
-    useEffect(() => {
-        if (!isTimerRunning) return;
-        const interval = setInterval(() => {
-            setTimer((prev) => Math.max(0, prev - 1));
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [isTimerRunning]);
 
     const handleChange = (index: number, value: string) => {
         if (!/^\d*$/.test(value)) return;
@@ -68,7 +63,9 @@ export default function OtpVerification() {
             return response.data;
         },
         onSuccess: ()=>{
-             navigate('/login', {replace: true, state:{message: 'Email verified! Please log in.'}})
+             stopTimer();
+             queryClient.invalidateQueries({ queryKey: ['auth-user'] });
+             navigate('/dashboard', {replace: true})
         },
         onError: (error: unknown)=>{
             setToast({
@@ -86,11 +83,15 @@ export default function OtpVerification() {
         const response = await api.post('/auth/resend-otp',{email});
         return response.data;
     },
-    onSuccess: ()=>{
-        setTimer(55);
+    onSuccess: (res)=>{
+        const dynamicSeconds = res?.data?.expiresInSeconds || 55;
+        startTimer(dynamicSeconds);
         setOtp(['','','','','',''])
         inputRefs.current[0]?.focus();
         setToast({show: true, message: 'New Verification code sent!', type: 'success'})
+    },
+    onError: (error: unknown) => {
+        setToast({ show: true, message: getApiErrorMessage(error, 'Unable to resend the code. Please try again.'), type: 'error' });
     }
    })
 
@@ -159,10 +160,12 @@ export default function OtpVerification() {
                                 type="text"
                                 inputMode="numeric"
                                 maxLength={1}
+                                aria-label={`Verification digit ${index + 1}`}
+                                autoComplete="one-time-code"
                                 value={digit}
                                 onChange={(e) => handleChange(index, e.target.value)}
                                 onKeyDown={(e) => handleKeyDown(index, e)}
-                                className="w-11 h-14 text-black  sm:w-12 sm:h-14 bg-gray-50 border border-gray-200 rounded-lg text-center text-xl font-semibold focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
+                                className="min-w-0 w-full max-w-12 h-14 text-black bg-gray-50 border border-gray-200 rounded-lg text-center text-xl font-semibold focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
                             />
                         ))}
                     </div>

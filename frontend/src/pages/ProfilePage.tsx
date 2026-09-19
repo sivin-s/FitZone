@@ -17,10 +17,9 @@ const ChevronDownIcon = () => <Svg size={16}><polyline points="6 9 12 15 18 9" /
 
 // Schemas 
 const profileSchema = z.object({
-  username: z.string()
+  username: z.string().trim()
     .min(3, 'Min 3 characters')
-    .max(30, 'Max 30 characters')
-    .refine((val) => !/\s/.test(val), { message: 'Username cannot contain spaces' }),
+    .max(30, 'Max 30 characters'),
   email: z.string().email(),
   phone: z.string()
     .nullable()
@@ -240,8 +239,7 @@ function PersonalDetailsForm({
                 <option value="" className='text-black'>Select Gender</option>
                 <option value="Male" className='text-black'>Male</option>
                 <option value="Female" className='text-black'>Female</option>
-                <option value="Non-binary" className='text-black'>Non-binary</option>
-                <option value="Prefer not to say" className='text-black'>Prefer not to say</option>
+                <option value="Other" className='text-black'>Other</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center text-black px-3 pointer-events-none text-gray-500">
                 <ChevronDownIcon />
@@ -279,16 +277,20 @@ function SecurityForm({
   onSubmit,
   isPending,
 }: {
-  onSubmit: (data: PasswordFormData) => void;
+  onSubmit: (data: PasswordFormData) => Promise<unknown>;
   isPending: boolean;
 }) {
   const { register, handleSubmit, formState: { errors }, reset } = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
   });
 
-  const handleFormSubmit = (data: PasswordFormData) => {
-    onSubmit(data);
-    reset(); // Clear password fields after submission
+  const handleFormSubmit = async (data: PasswordFormData) => {
+    try {
+      await onSubmit(data);
+      reset();
+    } catch {
+      // The mutation displays the error; preserve inputs so the user can retry.
+    }
   };
 
   return (
@@ -333,6 +335,12 @@ export default function ProfilePage() {
   const [toast, setToast] = useState<{ msg: string, type: 'success' | 'error' } | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    };
+  }, [avatarPreview]);
 
   //  Fetch
   const { data: profile, isLoading } = useQuery({
@@ -407,6 +415,11 @@ export default function ProfilePage() {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
+        setToast({ msg: 'Select an image smaller than 5 MB.', type: 'error' });
+        e.target.value = '';
+        return;
+      }
       setAvatarFile(file);
       setAvatarPreview(URL.createObjectURL(file)); // Instant preview
     }
@@ -444,7 +457,7 @@ export default function ProfilePage() {
             error={updateProfileMutation.error}
           />
           <SecurityForm
-            onSubmit={(data: PasswordFormData) => changePasswordMutation.mutate(data)}
+            onSubmit={(data: PasswordFormData) => changePasswordMutation.mutateAsync(data)}
             isPending={changePasswordMutation.isPending}
           />
         </div>

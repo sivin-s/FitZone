@@ -25,6 +25,7 @@ export default function ProtectedLayout() {
         mutationFn: () => api.post('/auth/logout'),
         onSuccess: () => {
             queryClient.clear();
+            queryClient.setQueryData(['auth-user'], null);
             navigate('/login', { replace: true })
         }
     });
@@ -39,12 +40,12 @@ export default function ProtectedLayout() {
     };
 
     return (
-        <div className="flex h-screen bg-base-200">
+        <div className="flex flex-col md:flex-row min-h-dvh md:h-dvh bg-slate-50">
             {/* Sidebar component */}
             <TraineeSidebar activeId={activeId} onNavigate={handleNavigate} />
 
             {/* Main Content Area: This is where DashboardPage, ProfilePage, etc., render */}
-            <main className="flex-1 overflow-y-auto p-6">
+            <main className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6">
                 <Outlet />
             </main>
         </div>

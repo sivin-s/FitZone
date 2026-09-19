@@ -10,6 +10,7 @@ export default function ForgotPasswordPage() {
     const [errorMessage, setErrorMessage] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setErrorMessage('');

@@ -8,11 +8,11 @@ import adminRoutes from "./modules/admin/routes/admin.routes.ts";
 import userRoutes from "./modules/users/routes/user.routes.ts";
 
 // env (zod)
-import { env } from "./config/env.ts";
+import { env } from "./config/env.config.ts";
 
 // middleware
-import { notFoundMiddleware } from "./middleware/not-found.middleware.ts";
-import { errorMiddleware } from "./middleware/error.middleware.ts";
+import { notFoundMiddleware } from "./shared/middlewares/not-found.middlewares.ts";
+import { errorMiddleware } from "./shared/middlewares/error.middlewares.ts";
 
 const app: Application = express();
 
@@ -30,7 +30,7 @@ app.use(cookiesParser());
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15m
-  limit: 50,
+  limit: 100,
   standardHeaders: "draft-7",
   legacyHeaders: false,
   message: {

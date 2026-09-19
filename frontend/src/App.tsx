@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import AdminLogin from './pages/admin/AdminLogin';
 import ResetOTPPasswordPage from './pages/ResetOTPPasswordPage';  // forgot-password
+import AboutPage from './pages/AboutPage';
 
 // Protected Pages
 import UserDashboard from './pages/UserDashboard';
@@ -22,7 +23,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedLayout from './layouts/ProtectedLayout';
 import AdminRoute from './components/AdminRoute';
 import AdminLayout from './layouts/AdminLayout';
+import PublicRoute from './components/PublicRoute';
 import NotFoundPage from './pages/NotFoundPage';
+import OtpVerification from './pages/OtpVerificationPage';
 
 
 const queryClient = new QueryClient({
@@ -36,10 +39,19 @@ const queryClient = new QueryClient({
 const router = createBrowserRouter([
   // PUBLIC ROUTES
   { path: '/', element: <LandingPage /> },
-  { path: '/login', element: <LoginPage /> },
-  { path: '/register', element: <SignUpPage /> },
-  {path: '/admin/login', element: <AdminLogin/>},
-  {path: '/forgot-password', element: <ResetOTPPasswordPage/>},
+  { path: '/about', element: <AboutPage /> },
+
+  // GUEST ONLY ROUTES (Redirects if already logged in)
+  {
+    element: <PublicRoute />,
+    children: [
+      { path: '/login', element: <LoginPage /> },
+      { path: '/register', element: <SignUpPage /> },
+      { path: '/admin/login', element: <AdminLogin /> },
+      { path: '/forgot-password', element: <ResetOTPPasswordPage /> },
+      { path: '/verify-otp', element: <OtpVerification /> },
+    ]
+  },
 
   {
     element: <ProtectedRoute />,
@@ -55,10 +67,10 @@ const router = createBrowserRouter([
   },
   // Admin protected
   {
-    element: <AdminRoute />, 
+    element: <AdminRoute />,
     children: [ // admin paths
       {
-        element: <AdminLayout />, 
+        element: <AdminLayout />,
         children: [
           { path: '/admin/dashboard', element: <AdminDashboard /> },
           { path: '/admin/users', element: <UserManagement /> },
@@ -66,7 +78,7 @@ const router = createBrowserRouter([
       },
     ],
   },
-  {path: '*', element: <NotFoundPage/>}  // catch all non specific path
+  { path: '*', element: <NotFoundPage /> }  // catch all non specific path
 ]);
 
 export default function App() {
