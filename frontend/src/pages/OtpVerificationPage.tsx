@@ -1,7 +1,8 @@
+import { authService } from '../services/authService';
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import {useMutation, useQueryClient} from '@tanstack/react-query'
-import {api, getApiErrorMessage} from '../lib/axios'
+import { getApiErrorMessage } from '../lib/axios'
 import Toast from '../components/Toast';
 import { useOtpLocalStorage } from '../lib/otpLocalStorage';
 
@@ -59,12 +60,15 @@ export default function OtpVerification() {
 
     const verifyMutation = useMutation({
         mutationFn: async()=>{
-            const response  = await api.post('/auth/verify-otp',{email,otp: otp.join('')});
+            if (!email) throw new Error("Email is required.");
+            const response  = await authService.verifyOtp({email,otp: otp.join('')});
             return response.data;
         },
-        onSuccess: ()=>{
+        onSuccess: async ()=>{
              stopTimer();
-             queryClient.invalidateQueries({ queryKey: ['auth-user'] });
+             await queryClient.cancelQueries({ queryKey: ['auth-user'] });
+             const session = await authService.userMe();
+             queryClient.setQueryData(['auth-user'], session.data.data);
              navigate('/dashboard', {replace: true})
         },
         onError: (error: unknown)=>{
@@ -80,7 +84,8 @@ export default function OtpVerification() {
 
    const resendMutation = useMutation({
     mutationFn: async ()=>{
-        const response = await api.post('/auth/resend-otp',{email});
+        if (!email) throw new Error("Email is required.");
+        const response = await authService.resendOtp({email});
         return response.data;
     },
     onSuccess: (res)=>{

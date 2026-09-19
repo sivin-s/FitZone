@@ -1,3 +1,4 @@
+import { HttpStatus } from "../../../shared/enums/httpStatus.enums.ts";
 import type { Response, NextFunction } from "express";
 import { asyncHandler } from "../../../shared/handler/asyncHandler.handler.ts";
 import { ApiResponse } from "../../../shared/responses/ApiResponse.responses.ts";
@@ -39,8 +40,14 @@ export class UserController implements IUserController {
       }
 
       res
-        .status(200)
-        .json(new ApiResponse(200, "Profile retrieved successfully", userDto));
+        .status(HttpStatus.OK)
+        .json(
+          new ApiResponse(
+            HttpStatus.OK,
+            "Profile retrieved successfully",
+            userDto,
+          ),
+        );
     },
   );
 
@@ -51,7 +58,8 @@ export class UserController implements IUserController {
         req.body,
       );
 
-      const resultObj = result ? result.toObject() : result;
+      if (!result) throw new NotFoundError("User not found");
+      const resultObj = UserMapper.toDto(result);
       if (resultObj && resultObj.profilePicture) {
         resultObj.profilePicture = await storageProvider.getPresignedUrl(
           resultObj.profilePicture,
@@ -59,8 +67,14 @@ export class UserController implements IUserController {
       }
 
       res
-        .status(200)
-        .json(new ApiResponse(200, "Profile updated successfully", resultObj));
+        .status(HttpStatus.OK)
+        .json(
+          new ApiResponse(
+            HttpStatus.OK,
+            "Profile updated successfully",
+            resultObj,
+          ),
+        );
     },
   );
 
@@ -72,7 +86,9 @@ export class UserController implements IUserController {
         oldPassword,
         newPassword,
       );
-      res.status(200).json(new ApiResponse(200, result.message));
+      res
+        .status(HttpStatus.OK)
+        .json(new ApiResponse(HttpStatus.OK, result.message));
     },
   );
 
@@ -90,8 +106,8 @@ export class UserController implements IUserController {
         result.profilePicture,
       );
 
-      res.status(200).json(
-        new ApiResponse(200, "Avatar updated successfully", {
+      res.status(HttpStatus.OK).json(
+        new ApiResponse(HttpStatus.OK, "Avatar updated successfully", {
           profilePicture: signedUrl,
         }),
       );

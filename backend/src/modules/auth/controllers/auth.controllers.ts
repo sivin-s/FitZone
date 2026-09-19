@@ -1,3 +1,4 @@
+import { HttpStatus } from "../../../shared/enums/httpStatus.enums.ts";
 import type { Request, Response } from "express";
 import { asyncHandler } from "../../../shared/handler/asyncHandler.handler.ts";
 import { ApiResponse } from "../../../shared/responses/ApiResponse.responses.ts";
@@ -28,8 +29,8 @@ export class AuthController implements IAuthController {
   register = asyncHandler(async (req: Request, res: Response) => {
     const { username, email, password } = req.body;
     const result = await this._authService.register(username, email, password);
-    res.status(201).json(
-      new ApiResponse(201, result.message, {
+    res.status(HttpStatus.CREATED).json(
+      new ApiResponse(HttpStatus.CREATED, result.message, {
         userId: result.userId,
         expiresInSeconds: result.expiresInSeconds,
       }),
@@ -56,8 +57,8 @@ export class AuthController implements IAuthController {
       );
     }
     res
-      .status(200)
-      .json(new ApiResponse(200, "User session retrieved.", payload));
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(HttpStatus.OK, "User session retrieved.", payload));
   });
 
   // Returns session info by reading only adminAccessToken
@@ -76,8 +77,10 @@ export class AuthController implements IAuthController {
       throw new UnauthorizedError("Token is not an admin token.");
     }
     res
-      .status(200)
-      .json(new ApiResponse(200, "Admin session retrieved.", payload));
+      .status(HttpStatus.OK)
+      .json(
+        new ApiResponse(HttpStatus.OK, "Admin session retrieved.", payload),
+      );
   });
 
   verifyOtp = asyncHandler(async (req: Request, res: Response) => {
@@ -96,14 +99,16 @@ export class AuthController implements IAuthController {
       res.cookie("userAccessToken", accessToken, getAccessTokenOptions());
       res.cookie("userRefreshToken", refreshToken, getRefreshTokenOptions());
     }
-    res.status(200).json(new ApiResponse(200, result.message));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(HttpStatus.OK, result.message));
   });
 
   resendOtp = asyncHandler(async (req: Request, res: Response) => {
     const { email } = req.body;
     const result = await this._authService.resendOtp(email);
-    res.status(200).json(
-      new ApiResponse(200, result.message, {
+    res.status(HttpStatus.OK).json(
+      new ApiResponse(HttpStatus.OK, result.message, {
         expiresInSeconds: result.expiresInSeconds,
       }),
     );
@@ -144,8 +149,10 @@ export class AuthController implements IAuthController {
     }
 
     res
-      .status(200)
-      .json(new ApiResponse(200, result.message, { user: result.user }));
+      .status(HttpStatus.OK)
+      .json(
+        new ApiResponse(HttpStatus.OK, result.message, { user: result.user }),
+      );
   });
 
   refreshToken = asyncHandler(async (req: Request, res: Response) => {
@@ -190,15 +197,17 @@ export class AuthController implements IAuthController {
     const newAccessToken = jwtService.generateAccessToken(payload);
     res.cookie(accessTokenKey, newAccessToken, getAccessTokenOptions());
     res
-      .status(200)
-      .json(new ApiResponse(200, "Access token refreshed successfully"));
+      .status(HttpStatus.OK)
+      .json(
+        new ApiResponse(HttpStatus.OK, "Access token refreshed successfully"),
+      );
   });
 
   forgotPassword = asyncHandler(async (req: Request, res: Response) => {
     const { email } = req.body;
     const result = await this._authService.forgotPassword(email);
-    res.status(200).json(
-      new ApiResponse(200, result.message, {
+    res.status(HttpStatus.OK).json(
+      new ApiResponse(HttpStatus.OK, result.message, {
         expiresInSeconds: result.expiresInSeconds,
       }),
     );
@@ -211,7 +220,9 @@ export class AuthController implements IAuthController {
       otp,
       newPassword,
     );
-    res.status(200).json(new ApiResponse(200, result.message));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(HttpStatus.OK, result.message));
   });
 
   logout = asyncHandler(async (req: Request, res: Response) => {
@@ -220,23 +231,32 @@ export class AuthController implements IAuthController {
     res.clearCookie("userRefreshToken", { path: "/" });
     res.clearCookie("adminAccessToken", { path: "/" });
     res.clearCookie("adminRefreshToken", { path: "/" });
-    res.status(200).json(new ApiResponse(200, "Logged out successfully."));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(HttpStatus.OK, "Logged out successfully."));
   });
 
   googleAuth = asyncHandler(async (req: Request, res: Response) => {
     const { idToken } = req.body;
     const result = await this._authService.googleAuth(idToken);
 
-    res.cookie("userAccessToken", result.accessToken, getAccessTokenOptions());
+    const isAdmin = result.user.role === "admin";
     res.cookie(
-      "userRefreshToken",
+      isAdmin ? "adminAccessToken" : "userAccessToken",
+      result.accessToken,
+      getAccessTokenOptions(),
+    );
+    res.cookie(
+      isAdmin ? "adminRefreshToken" : "userRefreshToken",
       result.refreshToken,
       getRefreshTokenOptions(),
     );
 
     res
-      .status(200)
-      .json(new ApiResponse(200, result.message, { user: result.user }));
+      .status(HttpStatus.OK)
+      .json(
+        new ApiResponse(HttpStatus.OK, result.message, { user: result.user }),
+      );
   });
 }
 

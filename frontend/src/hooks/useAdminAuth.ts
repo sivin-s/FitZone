@@ -1,5 +1,5 @@
+import { authService } from '../services/authService';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../lib/axios';
 
 // Separate hook exclusively for admin session.
 // Reads only adminAccessToken — completely independent from useAuth (which reads userAccessToken).
@@ -8,7 +8,7 @@ export const useAdminAuth = () => {
         queryKey: ['auth-admin'],  // Separate cache key — never conflicts with ['auth-user']
         queryFn: async () => {
             // Only reads adminAccessToken cookie
-            const response = await api.get('/auth/admin-me');
+            const response = await authService.adminMe();
             return response.data.data; // { userId, role }
         },
         retry: false,

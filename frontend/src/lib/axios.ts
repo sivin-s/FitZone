@@ -28,7 +28,9 @@ const refreshAuthLogic = async () => {
         const isBlocked = message.toLowerCase().includes('blocked');
         console.warn("session expired. Redirecting to login");
         const loginPath = window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login';
-        window.location.href = isBlocked ? loginPath + '?reason=blocked' : loginPath;
+        const params = new URLSearchParams({ returnTo: window.location.pathname + window.location.search + window.location.hash });
+        if (isBlocked) params.set('reason', 'blocked');
+        window.location.href = `${loginPath}?${params.toString()}`;
         return Promise.reject(error);
     }
 }
@@ -52,17 +54,6 @@ createAuthRefreshInterceptor(api, refreshAuthLogic, {
         );
     }
 })
-
-// api.interceptors.response.use( // middleware
-//     (response) => response,
-//     (error)=>{
-//         if(error.response?.status === 401){
-//             console.warn('Session expired. Redirecting to login.')
-//             //todo: redirect pending react router
-//         }
-//         return Promise.reject(error);
-//     }
-// )
 
 export function getApiErrorMessage(error: unknown, fallback: string): string {
     if (isAxiosError(error)) {

@@ -1,3 +1,4 @@
+import { getLoginRedirect } from '../lib/authRedirect';
 import { Navigate, Outlet, useLocation } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAuth } from '../hooks/useAdminAuth';
@@ -21,13 +22,13 @@ export default function PublicRoute() {
   if (isAdminPath) {
     // On /admin/login: if admin is already logged in, redirect to admin dashboard
     if (isAdminAuthenticated) {
-      return <Navigate to="/admin/dashboard" replace />;
+      return <Navigate to={getLoginRedirect(location.state, true, location.search)} replace />;
     }
     // Otherwise show the admin login page regardless of user session
   } else {
     // On /login, /register etc: if user is already logged in, redirect to user dashboard
     if (isAuthenticated && user?.role !== 'admin') {
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to={getLoginRedirect(location.state, false, location.search)} replace />;
     }
     // Admins can still access /login to log in as a regular user
   }

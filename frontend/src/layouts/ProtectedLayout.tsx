@@ -1,6 +1,6 @@
+import { authService } from '../services/authService';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../lib/axios';
 import TraineeSidebar from '../components/TraineeSidebar';
 
 const ROUTE_MAP: Record<string, string> = {
@@ -22,10 +22,12 @@ export default function ProtectedLayout() {
     const activeId = PATH_TO_ID[location.pathname] ?? 'dashboard';
 
     const logoutMutation = useMutation({
-        mutationFn: () => api.post('/auth/logout'),
+        mutationFn: () => authService.logout(),
         onSuccess: () => {
             queryClient.clear();
             queryClient.setQueryData(['auth-user'], null);
+      queryClient.setQueryData(['auth-admin'], null);
+      queryClient.removeQueries({ queryKey: ['user-profile'] });
             navigate('/login', { replace: true })
         }
     });

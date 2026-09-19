@@ -1,3 +1,7 @@
+import {
+  listUsersSchema,
+  type UserListOptions,
+} from "../schemas/listUsers.schemas.ts";
 import type { IAdminRepository } from "../interfaces/IAdminRepository.interfaces.ts";
 import type { IAdminService } from "../interfaces/IAdminService.interfaces.ts";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.errors.ts";
@@ -15,7 +19,12 @@ export class AdminService implements IAdminService {
     @inject(TYPES.IAdminRepository) private _adminRepository: IAdminRepository,
   ) {}
 
-  async getUsers(search?: string, page: number = 1, limit: number = 20) {
+  async getUsers(
+    search?: string,
+    page: number = 1,
+    limit: number = 20,
+    options?: UserListOptions,
+  ) {
     if (
       (search !== undefined && typeof search !== "string") ||
       !Number.isInteger(page) ||
@@ -26,7 +35,13 @@ export class AdminService implements IAdminService {
     ) {
       throw new BadRequestError("Invalid search or pagination parameters.");
     }
-    return await this._adminRepository.findUsers(search, page, limit);
+    const parsed = listUsersSchema.parse({ search, page, limit, ...options });
+    return await this._adminRepository.findUsers(
+      parsed.search,
+      parsed.page,
+      parsed.limit,
+      parsed,
+    );
   }
   async blockUser(userId: string, adminId: string) {
     if (userId === adminId) {

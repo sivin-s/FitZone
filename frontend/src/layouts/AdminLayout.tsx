@@ -1,6 +1,6 @@
+import { authService } from '../services/authService';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../lib/axios';
 import AdminSidebar from '../components/AdminSidebar';
 
 const ROUTE_MAP: Record<string, string> = {
@@ -20,9 +20,11 @@ export default function AdminLayout() {
   const activeId = PATH_TO_ID[location.pathname] ?? 'dashboard';
 
   const logoutMutation = useMutation({
-    mutationFn: () => api.post('/auth/logout'),
+    mutationFn: () => authService.logout(),
     onSuccess: () => {
       queryClient.setQueryData(['auth-admin'], null);
+      queryClient.setQueryData(['auth-user'], null);
+      queryClient.removeQueries({ queryKey: ['user-profile'] });
       navigate('/admin/login', { replace: true });
     },
   });

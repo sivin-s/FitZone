@@ -1,7 +1,7 @@
+import { userService } from '../services/userService';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../lib/axios';
 
 export default function UserDashboard() {
     const [hasUpcomingSession, setHasUpcomingSession] = useState(false);
@@ -9,7 +9,7 @@ export default function UserDashboard() {
     const { data: profile } = useQuery({
         queryKey: ['user-profile'],
         queryFn: async () => {
-            const res = await api.get('/user/profile');
+            const res = await userService.getProfile();
             return res.data.data;
         }
     });

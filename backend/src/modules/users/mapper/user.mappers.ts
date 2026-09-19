@@ -1,7 +1,17 @@
 import { type IUser } from "../../auth/models/user.models.ts";
-import { type UserDto } from "../dto/user.dto.ts";
+import { type UserDto } from "../DTO/user.dto.ts";
 
 export class UserMapper {
+  static toAuthDto(user: IUser) {
+    return {
+      id: user._id.toString(),
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      isVerified: user.isVerified,
+    };
+  }
+
   static toDto(user: IUser): UserDto {
     return {
       _id: user._id.toString(),
@@ -10,6 +20,7 @@ export class UserMapper {
       role: user.role,
       isBlocked: user.isBlocked,
       isVerified: user.isVerified,
+      isPremium: user.isPremium ?? false,
       profilePicture: user.profilePicture,
       gender: user.gender,
       phone: user.phone,

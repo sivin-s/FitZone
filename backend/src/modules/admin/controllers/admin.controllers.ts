@@ -1,3 +1,5 @@
+import { listUsersSchema } from "../schemas/listUsers.schemas.ts";
+import { HttpStatus } from "../../../shared/enums/httpStatus.enums.ts";
 import type { Request, Response, NextFunction } from "express";
 import { asyncHandler } from "../../../shared/handler/asyncHandler.handler.ts";
 import { ApiResponse } from "../../../shared/responses/ApiResponse.responses.ts";
@@ -23,11 +25,14 @@ export class AdminController implements IAdminController {
 
   getUsers = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-      const { search, page = 1, limit = 20 } = req.query;
+      const { search, page, limit, ...options } = listUsersSchema.parse(
+        req.query,
+      );
       const result = await this._adminService.getUsers(
-        search as string | undefined,
-        Number(page),
-        Number(limit),
+        search,
+        page,
+        limit,
+        options,
       );
 
       const usersList = UserMapper.toDtoList(result.users);
@@ -42,10 +47,13 @@ export class AdminController implements IAdminController {
         }),
       );
 
-      res.status(200).json(
-        new ApiResponse(200, "Users retrieved successfully", {
+      res.status(HttpStatus.OK).json(
+        new ApiResponse(HttpStatus.OK, "Users retrieved successfully", {
           users: usersWithUrls,
           total: result.total,
+          page: result.page,
+          limit: result.limit,
+          totalPages: result.totalPages,
         }),
       );
     },
@@ -63,8 +71,8 @@ export class AdminController implements IAdminController {
         userId as string,
         adminId as string,
       );
-      res.status(200).json(
-        new ApiResponse(200, "User blocked successfully", {
+      res.status(HttpStatus.OK).json(
+        new ApiResponse(HttpStatus.OK, "User blocked successfully", {
           isBlocked: result.isBlocked,
         }),
       );
@@ -75,8 +83,8 @@ export class AdminController implements IAdminController {
     async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       const { userId } = req.params;
       const result = await this._adminService.unblockUser(userId as string);
-      res.status(200).json(
-        new ApiResponse(200, "User unblocked successfully", {
+      res.status(HttpStatus.OK).json(
+        new ApiResponse(HttpStatus.OK, "User unblocked successfully", {
           isBlocked: result.isBlocked,
         }),
       );
@@ -141,8 +149,10 @@ export class AdminController implements IAdminController {
         );
       }
       res
-        .status(200)
-        .json(new ApiResponse(200, "User updated successfully", userDto));
+        .status(HttpStatus.OK)
+        .json(
+          new ApiResponse(HttpStatus.OK, "User updated successfully", userDto),
+        );
     },
   );
 }

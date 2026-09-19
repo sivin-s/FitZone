@@ -1,3 +1,4 @@
+import { HttpStatus } from "../enums/httpStatus.enums.ts";
 import type { NextFunction, Response } from "express";
 import { UnauthorizedError } from "../errors/UnauthorizedError.errros.ts";
 import { AppError } from "../errors/AppError.errors.ts";
@@ -15,7 +16,7 @@ export const authorizeRoles = (
     if (!allowedRoles.includes(req.user.role)) {
       throw new AppError(
         `Access denied. Required role(s): ${allowedRoles.join(", ")}. Your role: ${req.user.role}`,
-        403,
+        HttpStatus.FORBIDDEN,
       );
     }
     next();

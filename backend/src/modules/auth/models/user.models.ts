@@ -48,6 +48,7 @@ const userSchema = new Schema<IUser>(
       enum: ["user", "trainer", "admin"],
       default: "user",
     },
+    isPremium: { type: Boolean, default: false },
     isBlocked: {
       type: Boolean,
       default: false,

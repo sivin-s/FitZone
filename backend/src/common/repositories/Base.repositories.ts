@@ -49,6 +49,36 @@ export abstract class BaseRepository<
     return await query;
   }
 
+  async findPaginated(
+    filter: QueryFilter<T>,
+    page: number,
+    limit: number,
+    selectFields?: string,
+    options?: QueryOptions,
+  ) {
+    if (
+      !Number.isSafeInteger(page) ||
+      page < 1 ||
+      !Number.isSafeInteger(limit) ||
+      limit < 1
+    ) {
+      throw new RangeError("Page and limit must be positive integers.");
+    }
+    const total = await this.countDocuments(filter);
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const currentPage = Math.min(page, totalPages);
+    const items = await this.find(filter, selectFields, {
+      ...options,
+      skip: (currentPage - 1) * limit,
+      limit,
+    });
+    return { items, total, page: currentPage, limit, totalPages };
+  }
+
+  async countDocuments(filter: QueryFilter<T>): Promise<number> {
+    return this.model.countDocuments(filter).exec();
+  }
+
   async create(doc: Partial<T>): Promise<T> {
     // doc create
     return await this.model.create(doc);

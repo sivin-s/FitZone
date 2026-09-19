@@ -1,12 +1,12 @@
+import { authService } from '../services/authService';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../lib/axios';
 
 export const useAuth = () => {
     const { data, isLoading, error } = useQuery({
         queryKey: ['auth-user'],
         queryFn: async () => {
             // Only reads userAccessToken cookie, and checks isBlocked in DB
-            const response = await api.get('/auth/user-me');
+            const response = await authService.userMe();
             return response.data.data; // { userId, role }
         },
         retry: false,

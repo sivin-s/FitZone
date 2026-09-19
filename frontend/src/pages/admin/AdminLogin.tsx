@@ -1,10 +1,12 @@
+import { getLoginRedirect } from '../../lib/authRedirect';
+import { authService } from '../../services/authService';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, getApiErrorMessage } from '../../lib/axios';
+import { getApiErrorMessage } from '../../lib/axios';
 import {Eye,EyeClosed} from 'lucide-react'
 
 const adminLoginSchema = z.object({
@@ -16,6 +18,7 @@ type AdminLoginFormData = z.infer<typeof adminLoginSchema>;
 
 export default function AdminLogin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -25,18 +28,21 @@ export default function AdminLogin() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: AdminLoginFormData) => {
-      const response = await api.post('/auth/login', data);
+      const response = await authService.login(data);
       return response.data;
     },
-    onSuccess: (data) => {
-      const user = data.data?.user || data.user;
+    onSuccess: async (data) => {
+      const user = data.data.user;
       if (!user || user.role !== 'admin') {
-        api.post('/auth/logout');
+        await authService.logout();
+        queryClient.setQueryData(['auth-user'], null);
+        queryClient.setQueryData(['auth-admin'], null);
         setError('root', { type: 'manual', message: 'Access Denied. Admins only.' });
         return;
       }
-      queryClient.invalidateQueries({ queryKey: ['auth-user'] });
-      navigate('/admin/dashboard', { replace: true });
+      await queryClient.cancelQueries({ queryKey: ['auth-admin'] });
+      queryClient.setQueryData(['auth-admin'], { userId: user.id, role: user.role });
+      navigate(getLoginRedirect(location.state, true, location.search), { replace: true });
     },
     onError: (error: unknown) => {
       const message = getApiErrorMessage(error, 'Invalid credentials.');

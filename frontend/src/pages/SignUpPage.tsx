@@ -1,3 +1,4 @@
+import { authService } from '../services/authService';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -5,7 +6,7 @@ import { z } from 'zod';
 import { useNavigate, Link } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
-import { api, getApiErrorMessage } from '../lib/axios';
+import { getApiErrorMessage } from '../lib/axios';
 import { GoogleLogin } from '@react-oauth/google';
 
 const signupSchema = z.object({
@@ -37,12 +38,15 @@ export default function SignUpPage() {
     // Google Login Mutation
     const googleLoginMutation = useMutation({
         mutationFn: async (idToken: string) => {
-            const response = await api.post('/auth/google', { idToken });
+            const response = await authService.google({ idToken });
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['auth-user'] });
-            navigate('/dashboard', { replace: true });
+        onSuccess: async (data) => {
+            const user = data.data.user;
+            const key = user.role === 'admin' ? 'auth-admin' : 'auth-user';
+            await queryClient.cancelQueries({ queryKey: [key] });
+            queryClient.setQueryData([key], { userId: user.id, role: user.role });
+            navigate(user.role === 'admin' ? '/admin/dashboard' : '/dashboard', { replace: true });
         },
         onError: (error: unknown) => {
             const message = getApiErrorMessage(error, 'Google sign up failed. Please try again.');
@@ -70,7 +74,7 @@ export default function SignUpPage() {
 
     const signupMutation = useMutation({
         mutationFn: async (data: SignupFormData) => {
-            const response = await api.post('/auth/register', {
+            const response = await authService.register({
                 username: data.username,
                 email: data.email,
                 password: data.password,

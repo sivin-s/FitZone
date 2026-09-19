@@ -1,10 +1,11 @@
+import { authService } from '../services/authService';
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import { api, getApiErrorMessage } from '../lib/axios';
+import { getApiErrorMessage } from '../lib/axios';
 import { BadgeCheck, Mail, MailCheck } from 'lucide-react';
 import { useOtpLocalStorage } from '../lib/otpLocalStorage';
 
@@ -91,7 +92,7 @@ export default function ResetPasswordPage() {
     // Mutation to send the OTP
     const forgotPasswordMutation = useMutation({
         mutationFn: async (emailData: string) => {
-            const response = await api.post('/auth/forgot-password', { email: emailData });
+            const response = await authService.forgotPassword({ email: emailData });
             return response.data;
         },
         onSuccess: (res, emailData) => {
@@ -115,7 +116,7 @@ export default function ResetPasswordPage() {
     // Mutation to reset password with the OTP
     const resetPasswordMutation = useMutation({
         mutationFn: async (data: { email: string; otp: string; newPassword: string }) => {
-            const response = await api.post('/auth/reset-password', data);
+            const response = await authService.resetPassword(data);
             return response.data;
         },
         onSuccess: () => {

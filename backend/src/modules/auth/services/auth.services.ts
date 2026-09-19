@@ -1,3 +1,4 @@
+import { UserMapper } from "../../users/mapper/user.mappers.ts";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.errors.ts";
 import { UnauthorizedError } from "../../../shared/errors/UnauthorizedError.errros.ts";
 import { ConflictError } from "../../../shared/errors/ConflictError.errors.ts";
@@ -96,12 +97,7 @@ export class AuthService implements IAuthService {
 
     return {
       message: "Google authentication successful",
-      user: {
-        id: user?._id.toString(),
-        username: user?.username,
-        email: user?.email,
-        role: user?.role,
-      },
+      user: UserMapper.toAuthDto(user),
       accessToken,
       refreshToken,
     };
@@ -187,13 +183,7 @@ export class AuthService implements IAuthService {
 
     return {
       message: "Login successful",
-      user: {
-        id: user._id.toString(),
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        isVerified: user.isVerified,
-      },
+      user: UserMapper.toAuthDto(user),
       accessToken,
       refreshToken,
     };

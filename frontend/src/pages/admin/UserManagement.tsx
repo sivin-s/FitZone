@@ -1,6 +1,10 @@
-import { useMemo, useState } from "react";
+import Pagination from "../../components/Pagination";
+import { adminService } from "../../services/adminService";
+import type { User, UsersResponse, UserListParams } from "../../services/types";
+import { useDebounce } from "../../hooks/useDebounce";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, getApiErrorMessage } from "../../lib/axios";
+import { getApiErrorMessage } from "../../lib/axios";
 import AdminEditUserModal, {
   type AdminUser,
 } from "../../components/AdminEditUserModal";
@@ -18,29 +22,6 @@ function statusDot(isBlocked: boolean) {
   return isBlocked ? "bg-red-600" : "bg-green-500";
 }
 
-interface User {
-  _id: string;
-  username: string;
-  email: string;
-  role: string;
-  isBlocked: boolean;
-  isVerified: boolean;
-  createdAt: string;
-  profilePicture?: string;
-  isPremium: boolean;
-  phone?: string;
-  gender?: string;
-  city?: string;
-  pincode?: string;
-}
-
-interface UsersResponse {
-  users: Array<User>;
-  total: number;
-  page: number;
-  limit: number;
-}
-
 export default function UserManagement() {
   const queryClient = useQueryClient();
 
@@ -52,70 +33,52 @@ export default function UserManagement() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
+  const [sort, setSort] = useState("createdAt:desc");
+  const debouncedSearch = useDebounce(search.trim());
+  const searchPending = search.trim() !== debouncedSearch;
+  const membership: UserListParams['membership'] = tab === "Premium Members" ? "premium" : tab === "Trainers" ? "trainers" : tab === "Basic Members" ? "basic" : "all";
+  const [sortBy, sortOrder] = sort.split(":") as [NonNullable<UserListParams['sortBy']>, NonNullable<UserListParams['sortOrder']>];
 
   // Added missing tabs array
   const tabs = ["All Users", "Premium Members", "Trainers", "Basic Members"];
 
-  const { data, isLoading } = useQuery<UsersResponse>({
-    queryKey: ["admin-users", search, page, limit],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (search) params.append("search", search);
-      params.append("page", page.toString());
-      params.append("limit", limit.toString());
-
-      const response = await api.get(`/admin/users?${params.toString()}`);
+  const { data, isLoading, isFetching, isError, error, refetch } = useQuery<UsersResponse>({
+    queryKey: ["admin-users", debouncedSearch, page, limit, membership, statusFilter, sort],
+    queryFn: async ({ signal }) => {
+      const response = await adminService.getUsers({ search: debouncedSearch, page, limit, membership, status: statusFilter.toLowerCase() as UserListParams['status'], sortBy, sortOrder }, signal);
       return response.data.data;
     },
+    enabled: !searchPending,
   });
 
   const blockMutation = useMutation({
-    mutationFn: (userId: string) => api.patch(`/admin/users/${userId}/block`),
+    mutationFn: (userId: string) => adminService.blockUser(userId),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
     onError: (error: unknown) => setToast({ message: getApiErrorMessage(error, "Unable to block user."), type: "error" }),
   });
 
   const unblockMutation = useMutation({
-    mutationFn: (userId: string) => api.patch(`/admin/users/${userId}/unblock`),
+    mutationFn: (userId: string) => adminService.unblockUser(userId),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
     onError: (error: unknown) => setToast({ message: getApiErrorMessage(error, "Unable to unblock user."), type: "error" }),
   });
 
-  const users = data?.users;
-  const totalPages = Math.max(1, Math.ceil((data?.total || 0) / limit));
+  const filtered = data?.users ?? [];
+  const totalPages = data?.totalPages ?? 1;
+  const currentPage = data?.page ?? page;
 
-  const filtered = useMemo(() => {
-    const list = users ?? [];
-    return list.filter((user) => {
-      if (user.role === "admin") {
-        return false; // skip the admin
-      }
-      const matchesTab =
-        tab === "All Users"
-          ? true
-          : tab === "Premium Members"
-            ? user.isPremium === true
-            : tab === "Trainers"
-              ? user.role === "trainer"
-              : tab === "Basic Members"
-                ? user.role === "user" && !user.isPremium
-                : true;
-
-      const matchesStatus =
-        statusFilter === "All"
-          ? true
-          : statusFilter === "Active"
-            ? !user.isBlocked
-            : statusFilter === "Blocked"
-              ? user.isBlocked
-              : true;
-
-      return matchesTab && matchesStatus;
-    });
-  }, [users, tab, statusFilter]);
+  const hasFilters = search !== "" || tab !== "All Users" || statusFilter !== "All";
+  const clearFilters = () => {
+    setSearch("");
+    setTab("All Users");
+    setStatusFilter("All");
+    setPage(1);
+  };
+  const paginationBusy = isFetching || searchPending;
+  const totalUsers = data?.total ?? 0;
 
   const handleToggleAccess = (userId: string, isCurrentlyBlocked: boolean) => {
     if (isCurrentlyBlocked) {
@@ -164,12 +127,10 @@ export default function UserManagement() {
       if (updatedUser.phone) formData.append("phone", updatedUser.phone);
       if (updatedUser.gender) formData.append("gender", updatedUser.gender);
       if (updatedUser.city?.trim()) formData.append("city", updatedUser.city.trim());
-      if (updatedUser.pincode) formData.append("pincode", updatedUser.pincode);
+      if (updatedUser.pincode) formData.append("pincode", String(updatedUser.pincode));
       if (avatarFile) formData.append("image", avatarFile);
 
-      await api.patch(`/admin/users/${updatedUser.id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await adminService.updateUser(String(updatedUser.id), formData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
@@ -213,7 +174,7 @@ export default function UserManagement() {
               </h2>
             </div>
             <div className="w-full max-w-xs sm:max-w-sm">
-              <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-4 h-12">
+              <div className="flex items-center gap-3 bg-white border border-gray-300 rounded-xl px-4 h-12 shadow-sm transition focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100">
                 <svg
                   className="w-4 h-4 text-gray-400"
                   fill="none"
@@ -228,8 +189,11 @@ export default function UserManagement() {
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   aria-label="Search users"
                   className="w-full outline-none text-[15px] bg-transparent placeholder:text-gray-400"
-                  placeholder="Search users by name, email..."
+                  type="search"
+                  maxLength={100}
+                  placeholder="Search name or email…"
                 />
+                {search && <button type="button" aria-label="Clear search" className="rounded p-1 text-gray-500 hover:bg-gray-100 focus-visible:outline-2" onClick={() => { setSearch(""); setPage(1); }}>×</button>}
               </div>
             </div>
           </div>
@@ -240,6 +204,7 @@ export default function UserManagement() {
               {tabs.map((item) => (
                 <button
                   key={item}
+                  aria-pressed={tab === item}
                   onClick={() => {
                     setTab(item);
                     setPage(1);
@@ -254,10 +219,11 @@ export default function UserManagement() {
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-3 self-end">
+            <div className="flex flex-wrap items-center gap-3 self-end">
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                aria-label="Filter by status"
+                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
                 className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-semibold outline-none"
               >
                 <option value="All">All Status</option>
@@ -265,10 +231,19 @@ export default function UserManagement() {
                 <option value="Blocked">Blocked</option>
               </select>
 
+              <select aria-label="Sort users" value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm">
+                <option value="createdAt:desc">Newest first</option>
+                <option value="createdAt:asc">Oldest first</option>
+                <option value="username:asc">Name A–Z</option>
+                <option value="username:desc">Name Z–A</option>
+                <option value="email:asc">Email A–Z</option>
+                <option value="email:desc">Email Z–A</option>
+              </select>
               <button
+                disabled={isFetching || searchPending || !filtered.length}
                 onClick={exportUsers}
                 className="w-11 h-11 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-600"
-                title="Export CSV"
+                title="Export current page as CSV"
               >
                 <svg
                   className="w-5 h-5"
@@ -287,6 +262,15 @@ export default function UserManagement() {
             </div>
           </div>
 
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+            <p role="status" aria-live="polite" className="text-gray-600">
+              {paginationBusy ? "Updating users…" : `${totalUsers} ${totalUsers === 1 ? "user" : "users"} found`}
+              {tab !== "All Users" && ` · ${tab}`}
+              {statusFilter !== "All" && ` · ${statusFilter}`}
+            </p>
+            {hasFilters && <button type="button" onClick={clearFilters} className="rounded-lg border border-gray-300 bg-white px-3 py-2 font-medium hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-indigo-500">Clear filters</button>}
+          </div>
+
           {/* Users Table */}
           <section className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
             <div className="hidden md:grid grid-cols-12 px-6 py-4 bg-[#fafaf9] text-[12px] font-bold tracking-wide text-gray-600 uppercase">
@@ -298,13 +282,16 @@ export default function UserManagement() {
             </div>
 
             <div>
-              {isLoading ? (
+              {isLoading || searchPending ? (
                 <div className="p-12 text-center text-gray-400 flex justify-center">
                   <span className="loading loading-spinner loading-md"></span>
                 </div>
+              ) : isError ? (
+                <div className="p-12 text-center" role="alert"><p>{getApiErrorMessage(error, "Unable to load users.")}</p><button className="mt-3 underline" onClick={() => refetch()}>Try again</button></div>
               ) : filtered.length === 0 ? (
                 <div className="p-12 text-center text-gray-400">
                   <p className="font-semibold text-gray-500">No users found.</p>
+                  {hasFilters && <button type="button" onClick={clearFilters} className="mt-3 font-medium text-indigo-600 underline">Clear filters to see all users</button>}
                 </div>
               ) : (
                 filtered.map((user) => (
@@ -409,28 +396,8 @@ export default function UserManagement() {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="px-6 py-4 flex items-center justify-between gap-4 border-t border-gray-100">
-                <div className="text-[14px] text-gray-600">
-                  Page {page} of {totalPages}
-                </div>
-                <div className="flex items-center gap-2 text-[14px]">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="w-8 h-8 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-50"
-                  >
-                    ‹
-                  </button>
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="w-8 h-8 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-50"
-                  >
-                    ›
-                  </button>
-                </div>
-              </div>
+            {!isError && data && !searchPending && (
+              <Pagination currentPage={currentPage} totalPages={totalPages} totalUsers={totalUsers} limit={limit} busy={paginationBusy} onPageChange={setPage} onPageSizeChange={(size) => { setLimit(size); setPage(1); }} />
             )}
           </section>
         </div>

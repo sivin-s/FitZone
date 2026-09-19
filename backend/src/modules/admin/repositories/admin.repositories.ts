@@ -1,3 +1,5 @@
+import { BaseRepository } from "../../../common/repositories/Base.repositories.ts";
+import type { UserListOptions } from "../schemas/listUsers.schemas.ts";
 import type { QueryFilter } from "mongoose";
 import User, { type IUser } from "../../auth/models/user.models.ts";
 import type { IAdminRepository } from "../interfaces/IAdminRepository.interfaces.ts";
@@ -11,44 +13,54 @@ import { injectable } from "inversify";
    to create the class's dependencies when th class is injected.
 */
 @injectable()
-export class AdminRepository implements IAdminRepository {
-  async findUsers(
-    search?: string,
-    page: number = 1,
-    limit: number = 6,
-  ): Promise<{ users: IUser[]; total: number }> {
-    const query: QueryFilter<IUser> = { role: { $ne: "admin" } };
+export class AdminRepository
+  extends BaseRepository<IUser>
+  implements IAdminRepository
+{
+  constructor() {
+    super(User);
+  }
 
+  async findUsers(
+    search = "",
+    page = 1,
+    limit = 20,
+    options?: UserListOptions,
+  ) {
+    const query: QueryFilter<IUser> = { role: { $ne: "admin" } };
     if (search) {
+      const literal = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       query.$or = [
-        { username: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
+        { username: { $regex: literal, $options: "i" } },
+        { email: { $regex: literal, $options: "i" } },
       ];
     }
-
-    const [users, total] = await Promise.all([
-      User.find(query)
-        .select("-password")
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .sort({ createdAt: -1 }),
-      User.countDocuments(query),
-    ]);
-    return { users, total };
+    if (options?.membership === "premium") query.isPremium = true;
+    if (options?.membership === "trainers") query.role = "trainer";
+    if (options?.membership === "basic") {
+      query.role = "user";
+      query.isPremium = { $ne: true };
+    }
+    if (options?.status === "active") query.isBlocked = false;
+    if (options?.status === "blocked") query.isBlocked = true;
+    const direction = options?.sortOrder === "asc" ? 1 : -1;
+    const { items: users, ...pagination } = await this.findPaginated(
+      query,
+      page,
+      limit,
+      "-password",
+      {
+        sort: { [options?.sortBy ?? "createdAt"]: direction, _id: direction },
+        collation: { locale: "en", strength: 2 },
+      },
+    );
+    return { users, ...pagination };
   }
   async blockUser(userId: string): Promise<IUser | null> {
-    return await User.findByIdAndUpdate(
-      userId,
-      { isBlocked: true },
-      { new: true, runValidators: true },
-    );
+    return this.update(userId, { isBlocked: true });
   }
   async unblockUser(userId: string): Promise<IUser | null> {
-    return await User.findByIdAndUpdate(
-      userId,
-      { isBlocked: false },
-      { new: true, runValidators: true },
-    );
+    return this.update(userId, { isBlocked: false });
   }
   async updateUser(
     userId: string,
@@ -68,7 +80,7 @@ export class AdminRepository implements IAdminRepository {
     >,
   ): Promise<IUser | null> {
     if (data.profilePicture) {
-      const existingUser = await User.findById(userId);
+      const existingUser = await this.findById(userId);
       if (
         existingUser &&
         existingUser.profilePicture &&
@@ -81,10 +93,6 @@ export class AdminRepository implements IAdminRepository {
         }
       }
     }
-    return await User.findByIdAndUpdate(
-      userId,
-      { $set: data },
-      { new: true, runValidators: true },
-    ).select("-password");
+    return this.update(userId, { $set: data });
   }
 }

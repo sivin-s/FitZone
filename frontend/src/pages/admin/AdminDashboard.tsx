@@ -1,6 +1,6 @@
+import { adminService } from '../../services/adminService';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../../lib/axios';
 
 // component
 import {StatCard} from '../../components/admin/StatCard'
@@ -65,7 +65,7 @@ export default function AdminDashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-users-all"],
     queryFn: async () => {
-      const response = await api.get('/admin/users?limit=1000');
+      const response = await adminService.getUsers({ limit: 1000 });
       return response.data.data;
     }
   });

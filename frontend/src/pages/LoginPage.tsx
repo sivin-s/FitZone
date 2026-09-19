@@ -1,10 +1,12 @@
+import { getLoginRedirect } from '../lib/authRedirect';
+import { authService } from '../services/authService';
 import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate, useLocation, Link } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, getApiErrorMessage } from '../lib/axios';
+import { getApiErrorMessage } from '../lib/axios';
 import Toast from '../components/Toast';
 import { GoogleLogin } from '@react-oauth/google'
 
@@ -19,10 +21,6 @@ const loginSchema = z.object({
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
-
-type LoginLocationState = {
-    from?: { pathname: string };
-};
 
 export default function LoginPage() {
     const navigate = useNavigate();
@@ -40,7 +38,7 @@ export default function LoginPage() {
 
 
 
-    const from = (location.state as LoginLocationState | null)?.from?.pathname ?? '/dashboard';
+    const from = getLoginRedirect(location.state, false, location.search);
 
     const { register, handleSubmit, formState: { errors }, setError } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema) // custom validation
@@ -54,13 +52,16 @@ export default function LoginPage() {
 
     const loginMutation = useMutation({
         mutationFn: async (data: LoginFormData) => {
-            const response = await api.post('/auth/login', data);
+            const response = await authService.login(data);
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['auth-user'] });
+        onSuccess: async (data) => {
+            const user = data.data.user;
+            const key = user.role === 'admin' ? 'auth-admin' : 'auth-user';
+            await queryClient.cancelQueries({ queryKey: [key] });
+            queryClient.setQueryData([key], { userId: user.id, role: user.role });
             setToast({ show: true, message: 'Welcome back! Redirecting to your dashboard...', type: 'success' });
-            setTimeout(() => navigate(from, { replace: true }), 1500);
+            navigate(user.role === 'admin' ? '/admin/dashboard' : from, { replace: true });
         },
         onError: (error: unknown) => {
             const message = getApiErrorMessage(error, 'Invalid email or password.');
@@ -77,13 +78,16 @@ export default function LoginPage() {
     // google
     const googleLoginMutation = useMutation({
         mutationFn: async (idToken: string) => {
-            const response = await api.post('/auth/google', { idToken });
+            const response = await authService.google({ idToken });
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['auth-user'] });
+        onSuccess: async (data) => {
+            const user = data.data.user;
+            const key = user.role === 'admin' ? 'auth-admin' : 'auth-user';
+            await queryClient.cancelQueries({ queryKey: [key] });
+            queryClient.setQueryData([key], { userId: user.id, role: user.role });
             setToast({ show: true, message: 'Google login successful! Redirecting...', type: 'success' });
-            setTimeout(() => navigate(from, { replace: true }), 1500);
+            navigate(user.role === 'admin' ? '/admin/dashboard' : from, { replace: true });
         },
         onError: (error: unknown) => {
             const message = getApiErrorMessage(error, 'Google login failed. Please try again.');

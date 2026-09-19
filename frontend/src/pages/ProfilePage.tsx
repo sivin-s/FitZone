@@ -1,9 +1,10 @@
+import { userService } from '../services/userService';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, getApiErrorMessage } from '../lib/axios';
+import { getApiErrorMessage } from '../lib/axios';
 
 // Icons 
 const Svg = ({ children, size = 18 }: { children: React.ReactNode; size?: number }) => (
@@ -346,7 +347,7 @@ export default function ProfilePage() {
   const { data: profile, isLoading } = useQuery({
     queryKey: ['user-profile'],
     queryFn: async () => {
-      const res = await api.get('/user/profile');
+      const res = await userService.getProfile();
       return res.data.data; // Adjust if your backend wraps data differently
     }
   });
@@ -355,7 +356,7 @@ export default function ProfilePage() {
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {
       const { username, phone, gender, city, pincode } = data;
-      const res = await api.put('/user/profile', { username, phone, gender, city, pincode });
+      const res = await userService.updateProfile({ username, phone, gender, city, pincode });
       return res.data;
     },
     onSuccess: () => {
@@ -375,7 +376,7 @@ export default function ProfilePage() {
   // Change Password 
   const changePasswordMutation = useMutation({
     mutationFn: async (data: PasswordFormData) => {
-      const res = await api.patch('/user/change-password', {
+      const res = await userService.changePassword({
         oldPassword: data.current,
         newPassword: data.new
       });
@@ -395,9 +396,7 @@ export default function ProfilePage() {
       if (!avatarFile) return;
       const formData = new FormData();
       formData.append('image', avatarFile); // Backend expects key 'image'
-      await api.patch('/user/avatar', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await userService.uploadAvatar(formData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });

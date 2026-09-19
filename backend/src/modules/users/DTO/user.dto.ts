@@ -5,6 +5,7 @@ export interface UserDto {
   role: "user" | "trainer" | "admin";
   isBlocked: boolean;
   isVerified: boolean;
+  isPremium: boolean;
   profilePicture?: string;
   gender?: string;
   phone?: string;
